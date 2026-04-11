@@ -38,7 +38,7 @@
 
     #tooltip {
       position: fixed;
-      bottom: 1.8rem;
+      bottom: 2.5rem;
       left: 50%;
       transform: translateX(-50%);
       font-family: 'Courier New', monospace;
@@ -48,19 +48,45 @@
       z-index: 10;
       pointer-events: none;
       text-transform: uppercase;
-      transition: color 0.2s;
+      transition: color 0.3s;
       white-space: nowrap;
     }
 
     #tooltip.active { color: #00ff88; }
+
+    /* scroll dots */
+    #dots {
+      position: fixed;
+      bottom: 1.1rem;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 0.5rem;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.18);
+      transition: background 0.3s, transform 0.3s;
+    }
+
+    .dot.on {
+      background: #00ff88;
+      transform: scale(1.5);
+      box-shadow: 0 0 6px #00ff88;
+    }
   </style>
 </head>
 <body>
   <div id="ui">
     <div id="wordmark">dev<em>expermnt</em></div>
-    <div id="hint" id="hint-text">drag to orbit · tap to open</div>
+    <div id="hint">scroll to browse · tap to open</div>
   </div>
   <div id="tooltip">select an experiment</div>
+  <div id="dots"></div>
 
   <script type="importmap">
   {
@@ -416,32 +442,77 @@
     }
   });
 
-  // ─── camera orbit controls ────────────────────────────────────────────────────
+  // ─── scroll / snap orbit ─────────────────────────────────────────────────────
+  // Card snap angles match the arc positions
+  const cardAngles = apps.map((_, i) => (i - 1) * (isMobile ? 0.72 : 0.62));
+  let snapIdx = 1; // start facing center card
   let orbY = 0, orbX = 0.18;
-  let targetOrbY = 0, targetOrbX = 0.18;
+  let targetOrbY = cardAngles[snapIdx];
   let autoOrbit = true;
-  let dragActive = false, dragStartX = 0, dragStartY = 0;
-  let touchTapX = 0, touchTapY = 0;
+  let scrollIdleTimer = null;
+  let autoOrbitTimer = null;
+  let userInteracting = false;
 
-  window.addEventListener('mousedown', e => { dragActive = true; dragStartX = e.clientX; dragStartY = e.clientY; autoOrbit = false; });
-  window.addEventListener('mouseup', () => { dragActive = false; setTimeout(() => autoOrbit = true, 4000); });
-  window.addEventListener('mousemove', e => {
-    if (!dragActive) return;
-    targetOrbY += (e.clientX - dragStartX) * 0.005;
-    targetOrbX += (e.clientY - dragStartY) * 0.003;
-    targetOrbX = Math.max(-0.55, Math.min(0.65, targetOrbX));
-    dragStartX = e.clientX; dragStartY = e.clientY;
+  // Build nav dots
+  const dotsEl = document.getElementById('dots');
+  const dotEls = apps.map((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i === snapIdx ? ' on' : '');
+    dotsEl.appendChild(d);
+    return d;
   });
 
-  let tpx = 0, tpy = 0, tDrag = false;
+  function setSnap(idx) {
+    snapIdx = Math.max(0, Math.min(apps.length - 1, idx));
+    targetOrbY = cardAngles[snapIdx];
+    dotEls.forEach((d, i) => d.className = 'dot' + (i === snapIdx ? ' on' : ''));
+  }
+
+  function onScrollInput(delta) {
+    // delta > 0 = scroll right/down = next card
+    autoOrbit = false;
+    userInteracting = true;
+    clearTimeout(scrollIdleTimer);
+    clearTimeout(autoOrbitTimer);
+
+    // Nudge targetOrbY freely while scrolling
+    targetOrbY += delta * 0.0022;
+
+    // Find nearest card for dot highlight
+    const nearest = cardAngles.reduce((best, a, i) =>
+      Math.abs(a - targetOrbY) < Math.abs(cardAngles[best] - targetOrbY) ? i : best, 0);
+    dotEls.forEach((d, i) => d.className = 'dot' + (i === nearest ? ' on' : ''));
+
+    // Snap after scroll settles
+    scrollIdleTimer = setTimeout(() => {
+      setSnap(nearest);
+      userInteracting = false;
+      autoOrbitTimer = setTimeout(() => { autoOrbit = true; }, 3500);
+    }, 180);
+  }
+
+  // Mouse wheel
+  window.addEventListener('wheel', e => {
+    e.preventDefault();
+    onScrollInput(e.deltaY + e.deltaX);
+  }, { passive: false });
+
+  // Touch swipe (horizontal = orbit)
+  let tStartX = 0, tStartY = 0, tLastX = 0, touchTapX = 0, touchTapY = 0;
   window.addEventListener('touchstart', e => {
-    tpx = touchTapX = e.touches[0].clientX;
-    tpy = touchTapY = e.touches[0].clientY;
-    tDrag = true; autoOrbit = false;
+    tStartX = tLastX = touchTapX = e.touches[0].clientX;
+    tStartY = touchTapY = e.touches[0].clientY;
+    autoOrbit = false;
+    clearTimeout(autoOrbitTimer);
   }, { passive: true });
+
+  window.addEventListener('touchmove', e => {
+    const dx = e.touches[0].clientX - tLastX;
+    onScrollInput(-dx * 5); // invert: swipe left = next
+    tLastX = e.touches[0].clientX;
+  }, { passive: true });
+
   window.addEventListener('touchend', e => {
-    tDrag = false;
-    setTimeout(() => autoOrbit = true, 4000);
     const dx = Math.abs(e.changedTouches[0].clientX - touchTapX);
     const dy = Math.abs(e.changedTouches[0].clientY - touchTapY);
     if (dx < 8 && dy < 8) {
@@ -454,13 +525,6 @@
       }
     }
   });
-  window.addEventListener('touchmove', e => {
-    if (!tDrag) return;
-    targetOrbY += (e.touches[0].clientX - tpx) * 0.005;
-    targetOrbX += (e.touches[0].clientY - tpy) * 0.003;
-    targetOrbX = Math.max(-0.55, Math.min(0.65, targetOrbX));
-    tpx = e.touches[0].clientX; tpy = e.touches[0].clientY;
-  }, { passive: true });
 
   window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
@@ -477,18 +541,19 @@
   function animate() {
     requestAnimationFrame(animate);
     const t = clock.getElapsedTime();
-    const dt = clock.getDelta ? 0.016 : 0.016;
 
-    // auto orbit
-    if (autoOrbit) targetOrbY += 0.0025;
+    // gentle auto-orbit drift (slow, just enough to feel alive)
+    if (autoOrbit) targetOrbY += 0.0012;
 
-    // smooth camera
-    orbY += (targetOrbY - orbY) * 0.04;
-    orbX += (targetOrbX - orbX) * 0.04;
+    // smooth camera — tighter lerp when snapping, looser when scrolling free
+    const lerpSpeed = userInteracting ? 0.12 : 0.055;
+    orbY += (targetOrbY - orbY) * lerpSpeed;
     const camR = isMobile ? 7.5 : 8.5;
+    // gentle vertical breathing
+    const camH = 1.6 + Math.sin(t * 0.25) * 0.12;
     camera.position.set(
       Math.sin(orbY) * camR,
-      1.6 + orbX * 3.5 + Math.sin(t * 0.3) * 0.1,
+      camH,
       Math.cos(orbY) * camR,
     );
     camera.lookAt(0, 0, 0);
