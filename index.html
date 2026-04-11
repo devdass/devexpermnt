@@ -2,230 +2,530 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
   <title>devexpermnt</title>
   <style>
-    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #000; overflow: hidden; }
+    canvas { display: block; }
 
-    :root {
-      --bg: #0a0a0f;
-      --surface: #111118;
-      --border: #ffffff0f;
-      --accent: #00ff88;
-      --accent2: #7b5ea7;
-      --text: #ccc;
-      --muted: #555;
-    }
-
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Courier New', monospace;
-      min-height: 100vh;
+    #ui {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      padding: 1.4rem 1.8rem;
       display: flex;
-      flex-direction: column;
-    }
-
-    /* --- header --- */
-    header {
-      border-bottom: 1px solid var(--border);
-      padding: 2rem 2.5rem 1.5rem;
-      display: flex;
-      align-items: flex-end;
-      gap: 2rem;
-    }
-
-    header h1 {
-      font-size: 1.6rem;
-      letter-spacing: 0.25em;
-      color: #fff;
-    }
-
-    header h1 span { color: var(--accent); }
-
-    header p {
-      font-size: 0.75rem;
-      color: var(--muted);
-      letter-spacing: 0.1em;
-      padding-bottom: 0.15rem;
-    }
-
-    /* --- main --- */
-    main {
-      flex: 1;
-      padding: 2.5rem;
-      max-width: 960px;
-      width: 100%;
-      margin: 0 auto;
-    }
-
-    .section-label {
-      font-size: 0.65rem;
-      letter-spacing: 0.3em;
-      color: var(--muted);
-      text-transform: uppercase;
-      margin-bottom: 1.25rem;
-    }
-
-    /* --- grid --- */
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-      gap: 1px;
-      background: var(--border);
-      border: 1px solid var(--border);
-    }
-
-    .card {
-      background: var(--surface);
-      padding: 1.75rem;
-      text-decoration: none;
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-      position: relative;
-      overflow: hidden;
-      transition: background 0.15s;
-    }
-
-    .card::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(135deg, var(--card-color, var(--accent))08, transparent 60%);
-      opacity: 0;
-      transition: opacity 0.2s;
-    }
-
-    .card:hover { background: #16161f; }
-    .card:hover::before { opacity: 1; }
-
-    .card-icon {
-      font-size: 1.6rem;
-      line-height: 1;
-    }
-
-    .card-name {
-      font-size: 1rem;
-      letter-spacing: 0.15em;
-      color: var(--card-color, var(--accent));
-      text-transform: uppercase;
-    }
-
-    .card-desc {
-      font-size: 0.75rem;
-      color: var(--muted);
-      line-height: 1.6;
-      letter-spacing: 0.05em;
-    }
-
-    .card-tag {
-      display: inline-block;
-      font-size: 0.6rem;
-      letter-spacing: 0.15em;
-      padding: 0.2rem 0.5rem;
-      border: 1px solid;
-      border-color: var(--card-color, var(--accent));
-      color: var(--card-color, var(--accent));
-      opacity: 0.5;
-      text-transform: uppercase;
-      margin-top: auto;
-      align-self: flex-start;
-    }
-
-    .card-arrow {
-      position: absolute;
-      bottom: 1.5rem;
-      right: 1.5rem;
-      font-size: 0.8rem;
-      color: var(--card-color, var(--accent));
-      opacity: 0;
-      transform: translateX(-4px);
-      transition: all 0.2s;
-    }
-
-    .card:hover .card-arrow {
-      opacity: 0.7;
-      transform: translateX(0);
-    }
-
-    /* coming soon card */
-    .card.soon {
-      opacity: 0.4;
-      cursor: default;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 10;
       pointer-events: none;
     }
 
-    .card.soon .card-name { color: var(--muted); }
-    .card.soon .card-tag { border-color: var(--muted); color: var(--muted); }
+    #wordmark {
+      font-family: 'Courier New', monospace;
+      font-size: 1rem;
+      letter-spacing: 0.25em;
+      color: rgba(255,255,255,0.7);
+    }
+    #wordmark em { color: #00ff88; font-style: normal; }
 
-    /* --- footer --- */
-    footer {
-      border-top: 1px solid var(--border);
-      padding: 1.25rem 2.5rem;
+    #hint {
+      font-family: 'Courier New', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.15em;
+      color: rgba(255,255,255,0.2);
+      text-transform: uppercase;
+    }
+
+    #tooltip {
+      position: fixed;
+      bottom: 1.8rem;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: 'Courier New', monospace;
       font-size: 0.65rem;
-      color: var(--muted);
-      letter-spacing: 0.1em;
-      display: flex;
-      justify-content: space-between;
+      letter-spacing: 0.25em;
+      color: rgba(255,255,255,0.3);
+      z-index: 10;
+      pointer-events: none;
+      text-transform: uppercase;
+      transition: color 0.2s;
+      white-space: nowrap;
     }
 
-    footer a { color: var(--muted); text-decoration: none; }
-    footer a:hover { color: var(--accent); }
-
-    @media (max-width: 500px) {
-      header { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
-      main { padding: 1.5rem; }
-      footer { flex-direction: column; gap: 0.5rem; }
-    }
+    #tooltip.active { color: #00ff88; }
   </style>
 </head>
 <body>
-
-<header>
-  <h1>dev<span>expermnt</span></h1>
-  <p>a collection of experiments &amp; small builds</p>
-</header>
-
-<main>
-  <div class="section-label">/ apps</div>
-
-  <div class="grid">
-
-    <a class="card" href="./snake/" style="--card-color:#00ff88">
-      <div class="card-icon">🐍</div>
-      <div class="card-name">SNEK</div>
-      <div class="card-desc">Classic snake with neon visuals, particle effects, and escalating speed. WASD or swipe to play.</div>
-      <div class="card-tag">game</div>
-      <div class="card-arrow">→</div>
-    </a>
-
-    <div class="card soon" style="--card-color:#ff6b6b">
-      <div class="card-icon">🔲</div>
-      <div class="card-name">???</div>
-      <div class="card-desc">Next experiment. TBD.</div>
-      <div class="card-tag">coming soon</div>
-    </div>
-
-    <div class="card soon" style="--card-color:#6b9fff">
-      <div class="card-icon">🔲</div>
-      <div class="card-name">???</div>
-      <div class="card-desc">Another one.</div>
-      <div class="card-tag">coming soon</div>
-    </div>
-
+  <div id="ui">
+    <div id="wordmark">dev<em>expermnt</em></div>
+    <div id="hint" id="hint-text">drag to orbit · tap to open</div>
   </div>
-</main>
+  <div id="tooltip">select an experiment</div>
 
-<footer>
-  <span>devexpermnt — github.com/devdass</span>
-  <span id="count"></span>
-</footer>
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
+    }
+  }
+  </script>
 
-<script>
-  const apps = document.querySelectorAll('.card:not(.soon)').length;
-  document.getElementById('count').textContent = `${apps} app${apps !== 1 ? 's' : ''} live`;
-</script>
+  <script type="module">
+  import * as THREE from 'three';
 
+  // ─── renderer ────────────────────────────────────────────────────────────────
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.1;
+  document.body.appendChild(renderer.domElement);
+
+  // ─── scene / camera ──────────────────────────────────────────────────────────
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x03030a);
+  scene.fog = new THREE.FogExp2(0x03030a, 0.028);
+
+  const isMobile = window.innerWidth < 640;
+  const camera = new THREE.PerspectiveCamera(isMobile ? 75 : 62, window.innerWidth / window.innerHeight, 0.1, 300);
+  camera.position.set(0, 1.6, 8.5);
+  camera.lookAt(0, 0, 0);
+
+  // ─── lights ──────────────────────────────────────────────────────────────────
+  scene.add(new THREE.AmbientLight(0x0a0a2a, 6));
+  const rimLight = new THREE.DirectionalLight(0x4444ff, 1.5);
+  rimLight.position.set(-5, 8, -5);
+  scene.add(rimLight);
+
+  // ─── stars ───────────────────────────────────────────────────────────────────
+  const starCount = 7000;
+  const starPositions = new Float32Array(starCount * 3);
+  for (let i = 0; i < starCount * 3; i++) {
+    starPositions[i] = (Math.random() - 0.5) * 250;
+  }
+  const starGeo = new THREE.BufferGeometry();
+  starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+  const starMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.12, sizeAttenuation: true, transparent: true, opacity: 0.75 });
+  scene.add(new THREE.Points(starGeo, starMat));
+
+  // ─── floating dust ───────────────────────────────────────────────────────────
+  const dustCount = 300;
+  const dustPos = new Float32Array(dustCount * 3);
+  for (let i = 0; i < dustCount; i++) {
+    dustPos[i*3]   = (Math.random() - 0.5) * 20;
+    dustPos[i*3+1] = (Math.random() - 0.5) * 10;
+    dustPos[i*3+2] = (Math.random() - 0.5) * 14;
+  }
+  const dustGeo = new THREE.BufferGeometry();
+  dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos, 3));
+  const dustMat = new THREE.PointsMaterial({ color: 0x00ff88, size: 0.03, sizeAttenuation: true, transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending, depthWrite: false });
+  const dust = new THREE.Points(dustGeo, dustMat);
+  scene.add(dust);
+
+  // ─── grid floor ──────────────────────────────────────────────────────────────
+  const gridMat = new THREE.LineBasicMaterial({ color: 0x00ff88, transparent: true, opacity: 0.07 });
+  const gridGeo = new THREE.BufferGeometry();
+  const gridLines = [];
+  const G = 30, D = 1;
+  for (let i = -G; i <= G; i += D) {
+    gridLines.push(-G, 0, i,  G, 0, i);
+    gridLines.push(i, 0, -G,  i, 0, G);
+  }
+  gridGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(gridLines), 3));
+  const grid = new THREE.LineSegments(gridGeo, gridMat);
+  grid.position.y = -3.2;
+  scene.add(grid);
+
+  // ─── nebula planes ───────────────────────────────────────────────────────────
+  function makeNebulaTexture(color1, color2) {
+    const s = 512;
+    const c = document.createElement('canvas'); c.width = s; c.height = s;
+    const ctx = c.getContext('2d');
+    const g = ctx.createRadialGradient(s*0.4, s*0.4, 0, s*0.5, s*0.5, s*0.5);
+    g.addColorStop(0, color1);
+    g.addColorStop(0.4, color2);
+    g.addColorStop(1, 'transparent');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, s, s);
+    return new THREE.CanvasTexture(c);
+  }
+  const nebulaMat1 = new THREE.MeshBasicMaterial({ map: makeNebulaTexture('rgba(0,80,255,0.12)', 'rgba(80,0,180,0.05)'), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+  const nebulaMat2 = new THREE.MeshBasicMaterial({ map: makeNebulaTexture('rgba(0,255,100,0.07)', 'rgba(0,100,255,0.03)'), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+  const nPlane = new THREE.PlaneGeometry(40, 40);
+  const n1 = new THREE.Mesh(nPlane, nebulaMat1); n1.rotation.x = -0.3; n1.position.set(-8, 4, -20); scene.add(n1);
+  const n2 = new THREE.Mesh(nPlane, nebulaMat2); n2.rotation.x = 0.2; n2.rotation.z = 0.5; n2.position.set(10, 2, -18); scene.add(n2);
+
+  // ─── card texture builder ─────────────────────────────────────────────────────
+  function buildCardTexture(app) {
+    const W = 520, H = 720;
+    const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+    const ctx = cv.getContext('2d');
+
+    // bg gradient
+    const bg = ctx.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0, '#0b0b18');
+    bg.addColorStop(1, '#06060f');
+    ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+
+    // subtle hex pattern
+    ctx.strokeStyle = app.color + '18';
+    ctx.lineWidth = 1;
+    const hexR = 22;
+    for (let row = -1; row < H / (hexR * 1.5) + 1; row++) {
+      for (let col = -1; col < W / (hexR * Math.sqrt(3)) + 1; col++) {
+        const cx = col * hexR * Math.sqrt(3) + (row % 2 === 0 ? hexR * Math.sqrt(3) / 2 : 0);
+        const cy = row * hexR * 1.5;
+        ctx.beginPath();
+        for (let k = 0; k < 6; k++) {
+          const angle = (Math.PI / 3) * k - Math.PI / 6;
+          const x = cx + hexR * Math.cos(angle);
+          const y = cy + hexR * Math.sin(angle);
+          k === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        }
+        ctx.closePath(); ctx.stroke();
+      }
+    }
+
+    // scanlines
+    ctx.fillStyle = 'rgba(0,0,0,0.06)';
+    for (let y = 0; y < H; y += 3) ctx.fillRect(0, y, W, 1.5);
+
+    // glow bleed from top
+    const topGlow = ctx.createLinearGradient(0, 0, 0, 220);
+    topGlow.addColorStop(0, app.color + '22');
+    topGlow.addColorStop(1, 'transparent');
+    ctx.fillStyle = topGlow; ctx.fillRect(0, 0, W, 220);
+
+    // outer border
+    ctx.strokeStyle = app.color + (app.live ? 'cc' : '44');
+    ctx.lineWidth = 2;
+    ctx.shadowColor = app.color;
+    ctx.shadowBlur = app.live ? 18 : 6;
+    ctx.strokeRect(2, 2, W - 4, H - 4);
+    ctx.shadowBlur = 0;
+
+    // corner cuts (chamfered)
+    ctx.fillStyle = '#06060f';
+    const cut = 18;
+    [[0,0],[W,0],[0,H],[W,H]].forEach(([cx,cy]) => {
+      ctx.beginPath();
+      ctx.moveTo(cx, cy); ctx.lineTo(cx + (cx===0?cut:-cut), cy); ctx.lineTo(cx, cy + (cy===0?cut:-cut));
+      ctx.closePath(); ctx.fill();
+    });
+
+    // corner tick marks
+    ctx.strokeStyle = app.color + (app.live ? 'ff' : '55');
+    ctx.lineWidth = 2;
+    ctx.shadowColor = app.color; ctx.shadowBlur = 8;
+    const tick = 28;
+    [[0,0,1,1],[W,0,-1,1],[0,H,1,-1],[W,H,-1,-1]].forEach(([cx,cy,dx,dy]) => {
+      ctx.beginPath(); ctx.moveTo(cx + dx*tick, cy); ctx.lineTo(cx, cy); ctx.lineTo(cx, cy + dy*tick); ctx.stroke();
+    });
+    ctx.shadowBlur = 0;
+
+    // icon
+    ctx.font = '90px serif';
+    ctx.textAlign = 'center';
+    ctx.globalAlpha = app.live ? 1 : 0.4;
+    ctx.fillText(app.icon, W/2, 185);
+    ctx.globalAlpha = 1;
+
+    // horizontal rule
+    const rule = ctx.createLinearGradient(40, 0, W-40, 0);
+    rule.addColorStop(0, 'transparent');
+    rule.addColorStop(0.5, app.color + (app.live ? '88' : '33'));
+    rule.addColorStop(1, 'transparent');
+    ctx.fillStyle = rule; ctx.fillRect(40, 210, W-80, 1);
+
+    // name
+    ctx.font = `bold ${app.live ? 56 : 48}px 'Courier New'`;
+    ctx.fillStyle = app.live ? app.color : '#444';
+    ctx.shadowColor = app.color; ctx.shadowBlur = app.live ? 22 : 0;
+    ctx.fillText(app.name, W/2, 288);
+    ctx.shadowBlur = 0;
+
+    // desc lines
+    ctx.font = '22px Courier New';
+    ctx.fillStyle = app.live ? '#99aabb' : '#333';
+    const descLines = app.desc.split('\n');
+    descLines.forEach((line, i) => ctx.fillText(line, W/2, 346 + i * 36));
+
+    // bottom rule
+    ctx.fillStyle = rule; ctx.fillRect(40, H - 130, W-80, 1);
+
+    // tag pill
+    const tagTxt = app.tag;
+    const tagW = 130, tagH = 34;
+    const tagX = (W - tagW) / 2, tagY = H - 110;
+    ctx.strokeStyle = app.live ? app.color : '#333';
+    ctx.lineWidth = 1;
+    ctx.shadowColor = app.color; ctx.shadowBlur = app.live ? 10 : 0;
+    roundRect(ctx, tagX, tagY, tagW, tagH, 4);
+    ctx.stroke(); ctx.shadowBlur = 0;
+    ctx.font = '18px Courier New';
+    ctx.fillStyle = app.live ? app.color : '#333';
+    ctx.fillText(tagTxt, W/2, tagY + 22);
+
+    // live pulse dot
+    if (app.live) {
+      ctx.fillStyle = app.color;
+      ctx.shadowColor = app.color; ctx.shadowBlur = 14;
+      ctx.beginPath(); ctx.arc(tagX - 14, tagY + tagH/2, 5, 0, Math.PI*2); ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+
+    // index number
+    ctx.font = '14px Courier New';
+    ctx.fillStyle = '#ffffff18';
+    ctx.textAlign = 'right';
+    ctx.fillText(`[${String(app.index + 1).padStart(2,'0')}]`, W - 20, H - 20);
+
+    return new THREE.CanvasTexture(cv);
+  }
+
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x+r, y); ctx.lineTo(x+w-r, y);
+    ctx.arcTo(x+w,y, x+w,y+r, r); ctx.lineTo(x+w,y+h-r);
+    ctx.arcTo(x+w,y+h, x+w-r,y+h, r); ctx.lineTo(x+r,y+h);
+    ctx.arcTo(x,y+h, x,y+h-r, r); ctx.lineTo(x,y+r);
+    ctx.arcTo(x,y, x+r,y, r); ctx.closePath();
+  }
+
+  // ─── glow halo texture ───────────────────────────────────────────────────────
+  function makeHalo(hex) {
+    const s = 512; const cv = document.createElement('canvas'); cv.width = s; cv.height = s;
+    const ctx = cv.getContext('2d');
+    const g = ctx.createRadialGradient(s/2,s/2,0,s/2,s/2,s/2);
+    g.addColorStop(0, hex + 'bb'); g.addColorStop(0.25, hex + '44'); g.addColorStop(1, hex + '00');
+    ctx.fillStyle = g; ctx.fillRect(0,0,s,s);
+    return new THREE.CanvasTexture(cv);
+  }
+
+  // ─── app definitions ─────────────────────────────────────────────────────────
+  const apps = [
+    { name:'SNEK',  desc:'Neon snake.\nParticles & glow.\nEat. Grow. Die.', tag:'GAME', color:'#00ff88', colorInt:0x00ff88, icon:'🐍', url:'./snake/', live:true  },
+    { name:'???',   desc:'Next build.\nSomething wild.\nComing soon.',       tag:'SOON', color:'#ff6b9d', colorInt:0xff6b9d, icon:'✦', url:null,         live:false },
+    { name:'???',   desc:'Another one.\nUnknown subject.\nWatch this space.',tag:'SOON', color:'#6ba3ff', colorInt:0x6ba3ff, icon:'◈', url:null,         live:false },
+  ].map((a, i) => ({ ...a, index: i }));
+
+  // ─── build card scene objects ─────────────────────────────────────────────────
+  const CARD_W = 2.1, CARD_H = 2.9;
+  const radius = isMobile ? 4.2 : 5.2;
+  const cardGroups = [];
+  const cardMeshes = [];
+
+  // Arrange cards in a circular arc facing outward (toward camera orbit path)
+  apps.forEach((app, i) => {
+    const angle = (i - 1) * (isMobile ? 0.72 : 0.62); // spread
+    const group = new THREE.Group();
+    group.position.set(Math.sin(angle) * radius * 0.7, 0, Math.cos(angle) * -radius * 0.25);
+    group.rotation.y = angle * 0.85;
+    group.userData = { app, index: i };
+
+    // Card plane
+    const cardGeo = new THREE.PlaneGeometry(CARD_W, CARD_H);
+    const cardTex = buildCardTexture(app);
+    const cardMat = new THREE.MeshStandardMaterial({
+      map: cardTex,
+      transparent: true,
+      opacity: app.live ? 1 : 0.55,
+      roughness: 0.2,
+      metalness: 0.6,
+      envMapIntensity: 1,
+    });
+    const card = new THREE.Mesh(cardGeo, cardMat);
+    card.userData = { app, index: i };
+    group.add(card);
+    cardMeshes.push(card);
+
+    // Glow halo behind
+    const haloMat = new THREE.MeshBasicMaterial({
+      map: makeHalo(app.color),
+      transparent: true,
+      opacity: app.live ? 0.55 : 0.15,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const halo = new THREE.Mesh(new THREE.PlaneGeometry(CARD_W * 2.8, CARD_H * 2.6), haloMat);
+    halo.position.z = -0.05;
+    group.add(halo);
+
+    // Edge glow lines (wireframe border)
+    const edgeGeo = new THREE.EdgesGeometry(new THREE.PlaneGeometry(CARD_W, CARD_H));
+    const edgeMat = new THREE.LineBasicMaterial({ color: app.colorInt, transparent: true, opacity: app.live ? 0.7 : 0.2 });
+    group.add(new THREE.LineSegments(edgeGeo, edgeMat));
+
+    // Point light per card
+    const light = new THREE.PointLight(app.colorInt, app.live ? 1.8 : 0.4, 7);
+    light.position.set(0, 0, 1.2);
+    group.add(light);
+
+    scene.add(group);
+    cardGroups.push(group);
+  });
+
+  // ─── raycaster / interaction ──────────────────────────────────────────────────
+  const raycaster = new THREE.Raycaster();
+  const pointer = new THREE.Vector2();
+  let hoveredIdx = -1;
+  const tooltip = document.getElementById('tooltip');
+
+  function projectPointer(clientX, clientY) {
+    pointer.set(
+      (clientX / window.innerWidth) * 2 - 1,
+      -(clientY / window.innerHeight) * 2 + 1,
+    );
+  }
+
+  function checkHover() {
+    raycaster.setFromCamera(pointer, camera);
+    const hits = raycaster.intersectObjects(cardMeshes);
+    if (hits.length) {
+      const idx = hits[0].object.userData.index;
+      hoveredIdx = idx;
+      const app = apps[idx];
+      if (app.live) {
+        document.body.style.cursor = 'pointer';
+        tooltip.textContent = `→ open ${app.name}`;
+        tooltip.className = 'active';
+      } else {
+        document.body.style.cursor = 'default';
+        tooltip.textContent = 'coming soon';
+        tooltip.className = '';
+      }
+    } else {
+      hoveredIdx = -1;
+      document.body.style.cursor = 'default';
+      tooltip.textContent = 'select an experiment';
+      tooltip.className = '';
+    }
+  }
+
+  window.addEventListener('mousemove', e => {
+    projectPointer(e.clientX, e.clientY);
+    checkHover();
+  });
+
+  window.addEventListener('click', e => {
+    projectPointer(e.clientX, e.clientY);
+    raycaster.setFromCamera(pointer, camera);
+    const hits = raycaster.intersectObjects(cardMeshes);
+    if (hits.length) {
+      const app = hits[0].object.userData.app;
+      if (app.live && app.url) window.location.href = app.url;
+    }
+  });
+
+  // ─── camera orbit controls ────────────────────────────────────────────────────
+  let orbY = 0, orbX = 0.18;
+  let targetOrbY = 0, targetOrbX = 0.18;
+  let autoOrbit = true;
+  let dragActive = false, dragStartX = 0, dragStartY = 0;
+  let touchTapX = 0, touchTapY = 0;
+
+  window.addEventListener('mousedown', e => { dragActive = true; dragStartX = e.clientX; dragStartY = e.clientY; autoOrbit = false; });
+  window.addEventListener('mouseup', () => { dragActive = false; setTimeout(() => autoOrbit = true, 4000); });
+  window.addEventListener('mousemove', e => {
+    if (!dragActive) return;
+    targetOrbY += (e.clientX - dragStartX) * 0.005;
+    targetOrbX += (e.clientY - dragStartY) * 0.003;
+    targetOrbX = Math.max(-0.55, Math.min(0.65, targetOrbX));
+    dragStartX = e.clientX; dragStartY = e.clientY;
+  });
+
+  let tpx = 0, tpy = 0, tDrag = false;
+  window.addEventListener('touchstart', e => {
+    tpx = touchTapX = e.touches[0].clientX;
+    tpy = touchTapY = e.touches[0].clientY;
+    tDrag = true; autoOrbit = false;
+  }, { passive: true });
+  window.addEventListener('touchend', e => {
+    tDrag = false;
+    setTimeout(() => autoOrbit = true, 4000);
+    const dx = Math.abs(e.changedTouches[0].clientX - touchTapX);
+    const dy = Math.abs(e.changedTouches[0].clientY - touchTapY);
+    if (dx < 8 && dy < 8) {
+      projectPointer(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+      raycaster.setFromCamera(pointer, camera);
+      const hits = raycaster.intersectObjects(cardMeshes);
+      if (hits.length) {
+        const app = hits[0].object.userData.app;
+        if (app.live && app.url) window.location.href = app.url;
+      }
+    }
+  });
+  window.addEventListener('touchmove', e => {
+    if (!tDrag) return;
+    targetOrbY += (e.touches[0].clientX - tpx) * 0.005;
+    targetOrbX += (e.touches[0].clientY - tpy) * 0.003;
+    targetOrbX = Math.max(-0.55, Math.min(0.65, targetOrbX));
+    tpx = e.touches[0].clientX; tpy = e.touches[0].clientY;
+  }, { passive: true });
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+
+  // ─── animation loop ───────────────────────────────────────────────────────────
+  const clock = new THREE.Clock();
+  const baseScale = new THREE.Vector3(1, 1, 1);
+  const hoverScale = new THREE.Vector3(1.06, 1.06, 1.06);
+  const tmpScale = new THREE.Vector3();
+
+  function animate() {
+    requestAnimationFrame(animate);
+    const t = clock.getElapsedTime();
+    const dt = clock.getDelta ? 0.016 : 0.016;
+
+    // auto orbit
+    if (autoOrbit) targetOrbY += 0.0025;
+
+    // smooth camera
+    orbY += (targetOrbY - orbY) * 0.04;
+    orbX += (targetOrbX - orbX) * 0.04;
+    const camR = isMobile ? 7.5 : 8.5;
+    camera.position.set(
+      Math.sin(orbY) * camR,
+      1.6 + orbX * 3.5 + Math.sin(t * 0.3) * 0.1,
+      Math.cos(orbY) * camR,
+    );
+    camera.lookAt(0, 0, 0);
+
+    // float cards + hover scale
+    cardGroups.forEach((g, i) => {
+      g.position.y = Math.sin(t * 0.7 + i * 1.3) * 0.18;
+      tmpScale.copy(hoveredIdx === i ? hoverScale : baseScale);
+      g.scale.lerp(tmpScale, 0.09);
+
+      // pulse card light
+      const light = g.children[3];
+      if (light && light.isLight) {
+        const alive = apps[i].live;
+        light.intensity = (alive ? 1.8 : 0.3) + Math.sin(t * 1.2 + i * 2.1) * (alive ? 0.5 : 0.1);
+      }
+    });
+
+    // drift dust
+    const dustArr = dustGeo.attributes.position.array;
+    for (let i = 0; i < dustCount; i++) {
+      dustArr[i*3+1] += 0.003;
+      dustArr[i*3]   += Math.sin(t * 0.4 + i) * 0.001;
+      if (dustArr[i*3+1] > 5) dustArr[i*3+1] = -5;
+    }
+    dustGeo.attributes.position.needsUpdate = true;
+
+    // twinkle
+    starMat.opacity = 0.65 + Math.sin(t * 0.4) * 0.12;
+
+    // grid pulse
+    gridMat.opacity = 0.05 + Math.sin(t * 0.6) * 0.02;
+
+    renderer.render(scene, camera);
+  }
+
+  animate();
+  </script>
 </body>
 </html>
