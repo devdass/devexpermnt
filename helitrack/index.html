@@ -11,210 +11,161 @@
 
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-
     :root {
-      --green: #00ff88;
-      --amber: #ffbb00;
-      --red:   #ff4444;
-      --bg:    #0a0a0f;
-      --panel: rgba(10,10,18,0.92);
-      --border: rgba(255,255,255,0.07);
+      --green: #00ff88; --amber: #ffbb00; --red: #ff4455; --blue: #4499ff;
+      --bg: #0a0a0f; --panel: rgba(8,8,16,0.93); --border: rgba(255,255,255,0.07);
       --mono: 'Courier New', monospace;
     }
-
     html, body { height: 100%; background: var(--bg); color: #ccc; font-family: var(--mono); overflow: hidden; }
-
     #map { position: absolute; inset: 0; z-index: 0; }
 
     /* ── top bar ── */
     #topbar {
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      z-index: 500;
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      padding: 0.75rem 1rem;
-      background: var(--panel);
-      border-bottom: 1px solid var(--border);
-      backdrop-filter: blur(8px);
+      position: absolute; top: 0; left: 0; right: 0; z-index: 500;
+      display: flex; align-items: center; gap: 0.9rem;
+      padding: 0.6rem 1rem;
+      background: var(--panel); border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(10px); flex-wrap: wrap;
     }
-
-    #topbar h1 {
-      font-size: 0.85rem;
-      letter-spacing: 0.3em;
-      color: var(--green);
-      text-shadow: 0 0 10px var(--green);
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
-
-    .sep { width: 1px; height: 1.2rem; background: var(--border); flex-shrink: 0; }
-
-    .stat {
-      display: flex;
-      flex-direction: column;
-      gap: 0.05rem;
-      flex-shrink: 0;
-    }
-    .stat-label { font-size: 0.5rem; letter-spacing: 0.2em; color: #444; text-transform: uppercase; }
-    .stat-val   { font-size: 0.75rem; letter-spacing: 0.05em; color: #ccc; }
-    .stat-val.green { color: var(--green); }
-    .stat-val.amber { color: var(--amber); }
-
-    #status-dot {
-      width: 7px; height: 7px; border-radius: 50%;
-      background: #444; flex-shrink: 0;
-      transition: background 0.4s, box-shadow 0.4s;
-    }
-    #status-dot.live { background: var(--green); box-shadow: 0 0 8px var(--green); }
-    #status-dot.error { background: var(--red); box-shadow: 0 0 8px var(--red); }
-    #status-dot.loading { background: var(--amber); box-shadow: 0 0 8px var(--amber); animation: blink 0.6s infinite; }
-
-    @keyframes blink { 50% { opacity: 0.3; } }
-
-    .spacer { flex: 1; }
-
-    /* ── controls ── */
+    #topbar h1 { font-size: 0.82rem; letter-spacing: 0.3em; color: var(--green); text-shadow: 0 0 10px var(--green); white-space: nowrap; }
+    .sep { width: 1px; height: 1.1rem; background: var(--border); flex-shrink: 0; }
+    .stat { display: flex; flex-direction: column; gap: 0.05rem; flex-shrink: 0; }
+    .stat-label { font-size: 0.48rem; letter-spacing: 0.2em; color: #444; text-transform: uppercase; }
+    .stat-val { font-size: 0.72rem; }
+    .green { color: var(--green); } .amber { color: var(--amber); } .red { color: var(--red); } .blue { color: var(--blue); }
+    #status-dot { width: 7px; height: 7px; border-radius: 50%; background: #333; flex-shrink: 0; transition: all 0.4s; }
+    #status-dot.live    { background: var(--green); box-shadow: 0 0 8px var(--green); }
+    #status-dot.error   { background: var(--red);   box-shadow: 0 0 8px var(--red); }
+    #status-dot.loading { background: var(--amber);  box-shadow: 0 0 8px var(--amber); animation: pulse 0.7s infinite; }
+    @keyframes pulse { 50% { opacity: 0.25; } }
+    .spacer { flex: 1; min-width: 0.5rem; }
     .btn {
-      padding: 0.3rem 0.7rem;
-      background: transparent;
-      border: 1px solid var(--border);
-      color: #666;
-      font-family: var(--mono);
-      font-size: 0.6rem;
-      letter-spacing: 0.15em;
-      cursor: pointer;
-      text-transform: uppercase;
-      transition: all 0.15s;
-      white-space: nowrap;
+      padding: 0.28rem 0.65rem; background: transparent; border: 1px solid var(--border);
+      color: #555; font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.12em;
+      cursor: pointer; text-transform: uppercase; transition: all 0.15s; white-space: nowrap;
     }
     .btn:hover { border-color: var(--green); color: var(--green); }
-    .btn.on    { border-color: var(--green); color: var(--green); background: rgba(0,255,136,0.07); }
+    .btn.on   { border-color: var(--green); color: var(--green); background: rgba(0,255,136,0.06); }
+    .btn.amber-btn:hover { border-color: var(--amber); color: var(--amber); }
+    .btn.amber-btn.on    { border-color: var(--amber); color: var(--amber); background: rgba(255,187,0,0.06); }
     .btn.danger:hover { border-color: var(--red); color: var(--red); }
+
+    /* ── time filter bar ── */
+    #timebar {
+      position: absolute; top: 52px; left: 0; right: 0; z-index: 499;
+      display: flex; align-items: center; gap: 0.5rem;
+      padding: 0.4rem 1rem;
+      background: rgba(6,6,14,0.88); border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(8px);
+    }
+    #timebar span { font-size: 0.5rem; letter-spacing: 0.18em; color: #444; text-transform: uppercase; flex-shrink: 0; }
+    .time-btn {
+      padding: 0.18rem 0.55rem; background: transparent; border: 1px solid var(--border);
+      color: #444; font-family: var(--mono); font-size: 0.52rem; letter-spacing: 0.1em;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .time-btn:hover { border-color: var(--amber); color: var(--amber); }
+    .time-btn.on    { border-color: var(--amber); color: var(--amber); background: rgba(255,187,0,0.06); }
+
+    /* ── timeline canvas ── */
+    #timeline-wrap {
+      position: absolute; bottom: 0; left: 0; right: 0; z-index: 499;
+      background: var(--panel); border-top: 1px solid var(--border);
+      height: 62px; padding: 0.35rem 1rem 0.3rem;
+    }
+    #timeline-label { font-size: 0.45rem; letter-spacing: 0.2em; color: #333; text-transform: uppercase; margin-bottom: 0.2rem; }
+    #timeline { width: 100%; height: 40px; display: block; cursor: crosshair; }
 
     /* ── legend ── */
     #legend {
-      position: absolute;
-      bottom: 2.5rem;
-      left: 1rem;
-      z-index: 500;
-      background: var(--panel);
-      border: 1px solid var(--border);
-      backdrop-filter: blur(8px);
-      padding: 0.7rem 0.9rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.4rem;
+      position: absolute; bottom: 70px; left: 1rem; z-index: 500;
+      background: var(--panel); border: 1px solid var(--border);
+      backdrop-filter: blur(8px); padding: 0.6rem 0.85rem;
+      display: flex; flex-direction: column; gap: 0.38rem;
     }
-
-    .legend-row {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-size: 0.58rem;
-      letter-spacing: 0.1em;
-      color: #666;
-      text-transform: uppercase;
-    }
-
-    .legend-dot {
-      width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
-    }
+    .legend-row { display: flex; align-items: center; gap: 0.45rem; font-size: 0.55rem; letter-spacing: 0.1em; color: #555; }
+    .ldot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
 
     /* ── detail panel ── */
     #detail {
-      position: absolute;
-      bottom: 2.5rem;
-      right: 1rem;
-      z-index: 500;
-      width: 230px;
-      background: var(--panel);
-      border: 1px solid var(--border);
-      backdrop-filter: blur(8px);
-      padding: 0.85rem;
-      display: none;
+      position: absolute; bottom: 70px; right: 1rem; z-index: 500;
+      width: 220px; background: var(--panel); border: 1px solid var(--border);
+      backdrop-filter: blur(8px); padding: 0.8rem; display: none;
     }
-
     #detail.visible { display: block; }
-
-    #detail h3 {
-      font-size: 0.7rem;
-      letter-spacing: 0.25em;
-      color: var(--green);
-      margin-bottom: 0.6rem;
-    }
-
-    .detail-row {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.6rem;
-      letter-spacing: 0.08em;
-      margin-bottom: 0.3rem;
-    }
-    .detail-row .k { color: #444; }
-    .detail-row .v { color: #ccc; text-align: right; }
-    .detail-row .v.green { color: var(--green); }
-    .detail-row .v.amber { color: var(--amber); }
-
-    #detail-close {
-      position: absolute; top: 0.5rem; right: 0.6rem;
-      background: none; border: none; color: #444;
-      font-size: 0.9rem; cursor: pointer; font-family: var(--mono);
-    }
+    #detail h3 { font-size: 0.68rem; letter-spacing: 0.2em; color: var(--green); margin-bottom: 0.55rem; }
+    .dr { display: flex; justify-content: space-between; font-size: 0.57rem; letter-spacing: 0.06em; margin-bottom: 0.26rem; }
+    .dr .k { color: #444; } .dr .v { color: #bbb; text-align: right; }
+    #detail-close { position: absolute; top: 0.4rem; right: 0.55rem; background: none; border: none; color: #444; font-size: 0.9rem; cursor: pointer; }
     #detail-close:hover { color: #fff; }
+
+    /* ── modal ── */
+    #modal {
+      position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.8);
+      display: none; align-items: center; justify-content: center;
+      backdrop-filter: blur(4px);
+    }
+    #modal.open { display: flex; }
+    .modal-box {
+      background: #0e0e1a; border: 1px solid var(--border); padding: 1.5rem;
+      width: min(420px, 90vw); display: flex; flex-direction: column; gap: 0.8rem;
+    }
+    .modal-box h2 { font-size: 0.8rem; letter-spacing: 0.25em; color: var(--green); }
+    .modal-box p  { font-size: 0.6rem; letter-spacing: 0.06em; color: #555; line-height: 1.7; }
+    .modal-box a  { color: var(--amber); text-decoration: none; }
+    .modal-box input {
+      width: 100%; background: #07070f; border: 1px solid var(--border); color: #ccc;
+      font-family: var(--mono); font-size: 0.7rem; padding: 0.5rem 0.7rem; outline: none;
+    }
+    .modal-box input:focus { border-color: var(--green); }
+    .modal-btns { display: flex; gap: 0.5rem; justify-content: flex-end; }
+    #progress-log {
+      font-size: 0.52rem; letter-spacing: 0.05em; color: #444; max-height: 120px;
+      overflow-y: auto; line-height: 1.8; display: none;
+    }
+    #progress-log.visible { display: block; }
+    #progress-log .ok  { color: var(--green); }
+    #progress-log .err { color: var(--red); }
+    #progress-log .inf { color: var(--amber); }
 
     /* ── toast ── */
     #toast {
-      position: absolute;
-      top: 4rem; left: 50%;
-      transform: translateX(-50%);
-      background: var(--panel);
-      border: 1px solid var(--border);
-      padding: 0.4rem 1rem;
-      font-size: 0.6rem;
-      letter-spacing: 0.15em;
-      color: #666;
-      z-index: 600;
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity 0.3s;
-      white-space: nowrap;
+      position: absolute; top: 110px; left: 50%; transform: translateX(-50%);
+      background: var(--panel); border: 1px solid var(--border);
+      padding: 0.35rem 0.9rem; font-size: 0.58rem; letter-spacing: 0.12em; color: #666;
+      z-index: 600; pointer-events: none; opacity: 0; transition: opacity 0.3s; white-space: nowrap;
     }
     #toast.show { opacity: 1; }
 
-    /* mobile tweaks */
+    /* leaflet */
+    .leaflet-control-attribution { background: rgba(0,0,0,0.5) !important; color: #2a2a2a !important; font-size: 8px !important; }
+    .leaflet-control-attribution a { color: #444 !important; }
+    .leaflet-control-zoom a { background: var(--panel) !important; color: #555 !important; border-color: var(--border) !important; font-family: var(--mono) !important; }
+    .leaflet-control-zoom a:hover { color: var(--green) !important; }
+
     @media (max-width: 600px) {
-      #topbar { flex-wrap: wrap; gap: 0.5rem; padding: 0.6rem 0.8rem; }
       .stat { display: none; }
       #stat-police, #stat-total { display: flex; }
-      #legend { font-size: 0.5rem; }
-      #detail { width: calc(100vw - 2rem); right: 1rem; bottom: 5rem; }
+      #detail { width: calc(100vw - 2rem); }
     }
-
-    /* leaflet overrides */
-    .leaflet-control-attribution { background: rgba(0,0,0,0.5) !important; color: #333 !important; font-size: 9px !important; }
-    .leaflet-control-attribution a { color: #555 !important; }
-    .leaflet-control-zoom a { background: var(--panel) !important; color: #666 !important; border-color: var(--border) !important; }
-    .leaflet-control-zoom a:hover { color: var(--green) !important; }
   </style>
 </head>
 <body>
 
 <div id="map"></div>
 
+<!-- top bar -->
 <div id="topbar">
   <div id="status-dot"></div>
-  <h1>HELITRACK</h1>
+  <h1>HELITRACK / NZ</h1>
   <div class="sep"></div>
-
   <div class="stat" id="stat-police">
-    <div class="stat-label">Police</div>
+    <div class="stat-label">Police live</div>
     <div class="stat-val green" id="count-police">—</div>
   </div>
   <div class="stat" id="stat-total">
-    <div class="stat-label">NZ Air</div>
-    <div class="stat-val" id="count-total">—</div>
+    <div class="stat-label">All heli</div>
+    <div class="stat-val blue" id="count-total">—</div>
   </div>
   <div class="stat">
     <div class="stat-label">Heat pts</div>
@@ -224,351 +175,503 @@
     <div class="stat-label">Updated</div>
     <div class="stat-val" id="last-update">—</div>
   </div>
-
   <div class="spacer"></div>
-
-  <button class="btn on" id="btn-heat">Heatmap</button>
-  <button class="btn on" id="btn-live">Live</button>
-  <button class="btn"    id="btn-all">All NZ Air</button>
-  <button class="btn danger" id="btn-clear">Clear History</button>
+  <button class="btn on"  id="btn-heat">Heatmap</button>
+  <button class="btn on"  id="btn-live">Live</button>
+  <button class="btn on"  id="btn-all">All Heli</button>
+  <button class="btn amber-btn" id="btn-history">Load 7-day history</button>
+  <button class="btn danger"    id="btn-clear">Clear</button>
 </div>
 
+<!-- time filter -->
+<div id="timebar">
+  <span>Show:</span>
+  <button class="time-btn" id="tf-1h">1h</button>
+  <button class="time-btn" id="tf-6h">6h</button>
+  <button class="time-btn" id="tf-24h">24h</button>
+  <button class="time-btn" id="tf-7d">7d</button>
+  <button class="time-btn on" id="tf-all">All</button>
+</div>
+
+<!-- legend -->
 <div id="legend">
-  <div class="legend-row"><div class="legend-dot" style="background:#00ff88;box-shadow:0 0 6px #00ff88"></div>NZ Police (confirmed)</div>
-  <div class="legend-row"><div class="legend-dot" style="background:#ffbb00;box-shadow:0 0 6px #ffbb00"></div>Suspected / unlisted</div>
-  <div class="legend-row"><div class="legend-dot" style="background:#4488ff;box-shadow:0 0 6px #4488ff"></div>Other NZ helicopter</div>
-  <div class="legend-row" id="legend-heat"><div class="legend-dot" style="background:linear-gradient(90deg,#0000ff,#ff0000);border-radius:2px;width:24px;height:6px"></div>Heatmap intensity</div>
+  <div class="legend-row"><div class="ldot" style="background:var(--green);box-shadow:0 0 5px var(--green)"></div>NZ Police confirmed</div>
+  <div class="legend-row"><div class="ldot" style="background:var(--amber);box-shadow:0 0 5px var(--amber)"></div>Suspected / unlisted</div>
+  <div class="legend-row"><div class="ldot" style="background:var(--blue);box-shadow:0 0 5px var(--blue)"></div>Other helicopter</div>
 </div>
 
+<!-- detail -->
 <div id="detail">
   <button id="detail-close">×</button>
-  <h3 id="detail-cs">—</h3>
-  <div class="detail-row"><span class="k">Hex</span><span class="v" id="d-hex">—</span></div>
-  <div class="detail-row"><span class="k">Reg</span><span class="v" id="d-reg">—</span></div>
-  <div class="detail-row"><span class="k">Type</span><span class="v" id="d-type">—</span></div>
-  <div class="detail-row"><span class="k">Alt (ft)</span><span class="v" id="d-alt">—</span></div>
-  <div class="detail-row"><span class="k">Speed (kt)</span><span class="v" id="d-spd">—</span></div>
-  <div class="detail-row"><span class="k">Heading</span><span class="v" id="d-hdg">—</span></div>
-  <div class="detail-row"><span class="k">Status</span><span class="v green" id="d-status">—</span></div>
-  <div class="detail-row"><span class="k">Positions logged</span><span class="v amber" id="d-logged">—</span></div>
+  <h3 id="d-cs">—</h3>
+  <div class="dr"><span class="k">ICAO24</span><span class="v" id="d-hex">—</span></div>
+  <div class="dr"><span class="k">Reg</span><span class="v" id="d-reg">—</span></div>
+  <div class="dr"><span class="k">Type</span><span class="v" id="d-type">—</span></div>
+  <div class="dr"><span class="k">Altitude</span><span class="v" id="d-alt">—</span></div>
+  <div class="dr"><span class="k">Speed</span><span class="v" id="d-spd">—</span></div>
+  <div class="dr"><span class="k">Heading</span><span class="v" id="d-hdg">—</span></div>
+  <div class="dr"><span class="k">Classification</span><span class="v" id="d-class">—</span></div>
+  <div class="dr"><span class="k">Positions logged</span><span class="v amber" id="d-logged">—</span></div>
+</div>
+
+<!-- timeline -->
+<div id="timeline-wrap">
+  <div id="timeline-label">activity — past 7 days (hourly)</div>
+  <canvas id="timeline"></canvas>
+</div>
+
+<!-- OpenSky modal -->
+<div id="modal">
+  <div class="modal-box">
+    <h2>LOAD 7-DAY HISTORY</h2>
+    <p>Uses the free <a href="https://opensky-network.org/index.php?option=com_users&view=registration" target="_blank">OpenSky Network</a> API to pull position tracks for all known NZ Police hex codes over the past 7 days. Register free — no credit card.</p>
+    <input type="text" id="osky-user" placeholder="OpenSky username" autocomplete="username" />
+    <input type="password" id="osky-pass" placeholder="OpenSky password" autocomplete="current-password" />
+    <div class="modal-btns">
+      <button class="btn" id="osky-cancel">Cancel</button>
+      <button class="btn on" id="osky-load">Fetch History</button>
+    </div>
+    <div id="progress-log"></div>
+  </div>
 </div>
 
 <div id="toast"></div>
 
 <script>
-// ─── map setup ────────────────────────────────────────────────────────────────
-const map = L.map('map', {
-  center: [-41.28, 174.78],
-  zoom: 6,
-  zoomControl: false,
-  preferCanvas: true,
-});
-
+// ─── map ─────────────────────────────────────────────────────────────────────
+const map = L.map('map', { center: [-41.28, 174.78], zoom: 6, zoomControl: false, preferCanvas: true });
 L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
   attribution: '© <a href="https://openstreetmap.org">OSM</a> © <a href="https://carto.com">CartoDB</a>',
-  subdomains: 'abcd',
-  maxZoom: 19,
+  subdomains: 'abcd', maxZoom: 19,
 }).addTo(map);
-
 L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-// ─── state ────────────────────────────────────────────────────────────────────
-const STORAGE_KEY = 'helitrack_nz_v2';
-const MAX_HISTORY = 15000;
-const REFRESH_INTERVAL = 45000; // 45s
+// ─── constants ────────────────────────────────────────────────────────────────
+const STORAGE_KEY = 'helitrack_nz_v3';
+const MAX_HISTORY = 30000;
+const REFRESH_MS  = 45000;
 
+// Known NZ Police ICAO24 hex codes (from ADS-B community tracking)
+// NZ aircraft prefix: C8xxxx
+const KNOWN_POLICE_HEX = new Set([
+  'c82159', // ZK-HNZ — Auckland
+  'c820c3', // ZK-HCO — Wellington
+  'c8216d', // ZK-HQN — Christchurch
+  'c82043', // ZK-HBA
+  'c820e3', // ZK-HKA
+  'c821b6', // ZK-HPO
+  'c8218e', // ZK-HPQ
+]);
+
+const POLICE_CS_RE = /^(POLAIR\d*|NZP[\s\d]*|NZPOL)/i;
+const NZ_HEX_RE   = /^c8/i;
+
+// ─── state ────────────────────────────────────────────────────────────────────
 let history = [];
 try { history = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch {}
 
-let heatLayer = null;
+let heatLayer   = null;
 let liveMarkers = {};
-let trackLine = null;
-let selectedHex = null;
-let showHeat = true;
-let showLive = true;
-let showAllNZ = false;
+let showHeat    = true;
+let showLive    = true;
+let showAllHeli = true;
+let timeFilter  = 0; // 0=all, else cutoff timestamp
 
-// ─── police identification ─────────────────────────────────────────────────
-// NZ Police callsigns: POLAIR + number, or NZPOLICE, or known registrations
-const POLICE_CALLSIGN_RE = /^(POLAIR|NZP\s*\d|NZPOLICE|N\s*ZP)/i;
-
-// Known NZ Police ICAO24 hex codes (ADS-B Exchange community data)
-// NZ country code = C8xxxx
-const KNOWN_POLICE = new Set([
-  'c82159', // ZK-HNZ  — Auckland Police
-  'c8216d', // ZK-HCO  — Wellington Police
-  'c821b6', // ZK-HQN  — Christchurch Police
-  'c82043', // ZK-HBA  — Police
-  'c820e3', // ZK-HKA  — Police
-]);
-
-function classifyAircraft(ac) {
+// ─── classify ────────────────────────────────────────────────────────────────
+function classify(ac) {
   const hex = (ac.hex || '').toLowerCase();
-  const cs  = (ac.flight || '').trim();
-  const reg = (ac.r || '').trim();
-
-  if (KNOWN_POLICE.has(hex) || POLICE_CALLSIGN_RE.test(cs) || /^ZK-H[NCQ]/i.test(reg)) {
-    return 'police';
-  }
-  // NZ-registered helicopter (hex C8xxxx) with no public callsign = suspect
-  if (hex.startsWith('c8') && !cs && isRotorcraft(ac)) {
-    return 'suspect';
-  }
+  const cs  = (ac.flight || ac.callsign || '').trim();
+  const reg = (ac.r || ac.registration || '').trim();
+  if (KNOWN_POLICE_HEX.has(hex) || POLICE_CS_RE.test(cs)) return 'police';
+  if (NZ_HEX_RE.test(hex) && isRotorcraft(ac) && !cs) return 'suspect';
   if (isRotorcraft(ac)) return 'heli';
   return 'fixed';
 }
 
 function isRotorcraft(ac) {
-  return ac.category === 'A7'
-    || (ac.t && /^(R|EC|AS|AW|B0|B2|B4|B47|S7|S9|H1|H2|MD|RH|UH|CH)/i.test(ac.t))
-    || (ac.desc && /heli|rotor/i.test(ac.desc));
+  const cat = ac.category || '';
+  const t   = (ac.t || ac.type || '').toUpperCase();
+  return cat === 'A7'
+    || /^(EC|AS|AW|B0|B2|B4|B47|B41|S7|S9|H1|H2|MD|RH|UH|CH|R4|R5|R6|R7|R8|R9|BO|BK|MH|VH|SA)/.test(t)
+    || (ac.desc || '').toLowerCase().includes('heli');
 }
 
-// ─── marker icons ─────────────────────────────────────────────────────────────
-function makeIcon(color, glow, size = 10) {
-  return L.divIcon({
-    className: '',
-    iconSize: [size * 2, size * 2],
-    iconAnchor: [size, size],
-    html: `<svg width="${size*2}" height="${size*2}" viewBox="0 0 ${size*2} ${size*2}" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="${size}" cy="${size}" r="${size - 2}" fill="${color}" fill-opacity="0.18" stroke="${color}" stroke-width="1.5"/>
-      <circle cx="${size}" cy="${size}" r="${size/3}" fill="${color}" filter="url(#g)"/>
-      <defs><filter id="g"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
-    </svg>`,
-  });
+// ─── API cascade ──────────────────────────────────────────────────────────────
+async function fetchLive() {
+  const timeout = ms => new Promise((_, r) => setTimeout(() => r(new Error('timeout')), ms));
+
+  // 1 — airplanes.live (most reliable, no auth)
+  try {
+    const resp = await Promise.race([
+      fetch('https://api.airplanes.live/v2/point/-41.28/174.78/900'),
+      timeout(10000),
+    ]);
+    if (!resp.ok) throw new Error(resp.status);
+    const d = await resp.json();
+    if (d.ac?.length) return normalise(d.ac, 'airplanes.live');
+  } catch {}
+
+  // 2 — adsb.fi
+  try {
+    const resp = await Promise.race([
+      fetch('https://api.adsb.fi/v1/aircraft?lat=-41.28&lon=174.78&radius=900'),
+      timeout(10000),
+    ]);
+    if (!resp.ok) throw new Error(resp.status);
+    const d = await resp.json();
+    if (d.ac?.length) return normalise(d.ac, 'adsb.fi');
+  } catch {}
+
+  // 3 — OpenSky (anonymous, rate-limited)
+  const resp = await Promise.race([
+    fetch('https://opensky-network.org/api/states/all?lamin=-47.5&lamax=-34&lomin=166&lomax=178.5'),
+    timeout(12000),
+  ]);
+  if (!resp.ok) throw new Error('All APIs failed');
+  const d = await resp.json();
+  return (d.states || [])
+    .filter(s => s[5] && s[6] && !s[8])
+    .map(s => ({
+      hex: s[0], flight: (s[1]||'').trim(), r: '', t: '', category: '', desc: '',
+      lat: s[6], lon: s[5],
+      alt_baro: s[7] ? Math.round(s[7] * 3.281) : null,
+      gs: s[9] ? Math.round(s[9] * 1.944) : null,
+      track: s[10],
+    }));
 }
 
-const ICONS = {
-  police:  makeIcon('#00ff88', '#00ff88', 13),
-  suspect: makeIcon('#ffbb00', '#ffbb00', 11),
-  heli:    makeIcon('#4488ff', '#4488ff', 10),
-};
-
-// heading arrow icon
-function makeArrow(color, heading) {
-  const r = 14;
-  return L.divIcon({
-    className: '',
-    iconSize: [r*2, r*2],
-    iconAnchor: [r, r],
-    html: `<svg width="${r*2}" height="${r*2}" viewBox="0 0 ${r*2} ${r*2}" xmlns="http://www.w3.org/2000/svg">
-      <g transform="rotate(${heading}, ${r}, ${r})">
-        <polygon points="${r},2 ${r+5},${r+7} ${r},${r+3} ${r-5},${r+7}" fill="${color}" fill-opacity="0.9"/>
-      </g>
-    </svg>`,
-  });
+function normalise(ac, src) {
+  return ac.filter(a => a.lat && a.lon && !a.ground && a.alt_baro !== 'ground').map(a => ({
+    hex: a.hex, flight: (a.flight||'').trim(), r: a.r||'', t: a.t||'',
+    category: a.category||'', desc: a.desc||'',
+    lat: a.lat, lon: a.lon,
+    alt_baro: a.alt_baro ? (typeof a.alt_baro === 'number' ? Math.round(a.alt_baro) : null) : null,
+    gs: a.gs ? Math.round(a.gs) : null,
+    track: a.track || 0,
+    _src: src,
+  }));
 }
 
 // ─── heatmap ──────────────────────────────────────────────────────────────────
+function filteredHistory() {
+  if (!timeFilter) return history;
+  return history.filter(p => p.ts >= timeFilter);
+}
+
 function buildHeatmap() {
-  if (heatLayer) map.removeLayer(heatLayer);
-
-  // Weight police hits 3x
-  const pts = history.map(p => [
+  if (heatLayer) { map.removeLayer(heatLayer); heatLayer = null; }
+  const pts = filteredHistory().map(p => [
     p.lat, p.lng,
-    p.type === 'police' ? 1.0 : p.type === 'suspect' ? 0.6 : 0.3
+    p.type === 'police' ? 1.0 : p.type === 'suspect' ? 0.55 : 0.25,
   ]);
-
-  if (!pts.length) return;
-
+  document.getElementById('count-heat').textContent = pts.length.toLocaleString();
+  if (!pts.length || !showHeat) return;
   heatLayer = L.heatLayer(pts, {
-    radius: 22,
-    blur: 18,
-    maxZoom: 10,
-    max: 1.0,
-    gradient: { 0.0: '#000080', 0.3: '#0000ff', 0.5: '#00ffff', 0.7: '#ffff00', 1.0: '#ff0000' },
+    radius: 20, blur: 16, maxZoom: 11, max: 1.0,
+    gradient: { 0: '#000066', 0.25: '#0000ff', 0.5: '#00ffff', 0.75: '#ffff00', 1.0: '#ff0000' },
+  }).addTo(map);
+}
+
+// ─── markers ─────────────────────────────────────────────────────────────────
+function arrowIcon(color, heading) {
+  const s = 26;
+  return L.divIcon({
+    className: '', iconSize: [s, s], iconAnchor: [s/2, s/2],
+    html: `<svg width="${s}" height="${s}" viewBox="0 0 ${s} ${s}" xmlns="http://www.w3.org/2000/svg">
+      <g transform="rotate(${heading||0}, ${s/2}, ${s/2})">
+        <polygon points="${s/2},3 ${s/2+5},${s-5} ${s/2},${s-9} ${s/2-5},${s-5}"
+          fill="${color}" fill-opacity="0.95" stroke="rgba(0,0,0,0.4)" stroke-width="0.5"/>
+      </g>
+      <circle cx="${s/2}" cy="${s/2}" r="2" fill="${color}" fill-opacity="0.5"/>
+    </svg>`,
   });
-
-  if (showHeat) heatLayer.addTo(map);
-  document.getElementById('count-heat').textContent = history.length.toLocaleString();
 }
 
-// ─── fetch aircraft ───────────────────────────────────────────────────────────
-const setStatus = s => {
-  const d = document.getElementById('status-dot');
-  d.className = s;
-};
+const COLOR = { police: '#00ff88', suspect: '#ffbb00', heli: '#4499ff' };
 
-async function fetchAircraft() {
-  setStatus('loading');
-  try {
-    // ADSB.fi — free, CORS-open, includes category field
-    const url = 'https://api.adsb.fi/v1/aircraft?lat=-41.28&lon=174.78&radius=900';
-    const resp = await fetch(url, { signal: AbortSignal.timeout(12000) });
-    if (!resp.ok) throw new Error(resp.status);
-    const data = await resp.json();
-    return (data.ac || []).filter(a => a.lat && a.lon && !a.ground);
-  } catch (e) {
-    // fallback: OpenSky
-    try {
-      const url2 = 'https://opensky-network.org/api/states/all?lamin=-47.5&lamax=-34&lomin=166&lomax=178.5';
-      const resp2 = await fetch(url2, { signal: AbortSignal.timeout(12000) });
-      const data2 = await resp2.json();
-      return (data2.states || [])
-        .filter(s => s[5] && s[6] && !s[8])
-        .map(s => ({
-          hex: s[0], flight: (s[1]||'').trim(), r: '',
-          lat: s[6], lon: s[5],
-          alt_baro: s[7] ? Math.round(s[7] * 3.281) : null,
-          gs: s[9] ? Math.round(s[9] * 1.944) : null,
-          track: s[10], t: '', category: '',
-        }));
-    } catch { throw new Error('Both APIs failed'); }
-  }
-}
-
-// ─── render aircraft ──────────────────────────────────────────────────────────
-function renderAircraft(aircraft) {
+function renderLive(aircraft) {
   const now = Date.now();
-  const seenHexes = new Set();
-  let policeCount = 0, totalCount = 0;
-  const newHistory = [];
+  const seen = new Set();
+  let policeN = 0, heliN = 0;
+  const newPts = [];
 
   aircraft.forEach(ac => {
-    const type = classifyAircraft(ac);
-    const isPolice = type === 'police';
-    const isSuspect = type === 'suspect';
-    const isHeli = type === 'heli';
-
-    // Filter display
-    if (!showAllNZ && !isPolice && !isSuspect) return;
+    const type  = classify(ac);
     if (type === 'fixed') return;
+    if (!showAllHeli && type === 'heli') return;
 
-    totalCount++;
-    if (isPolice || isSuspect) policeCount++;
+    heliN++;
+    if (type === 'police' || type === 'suspect') policeN++;
 
-    const hex = ac.hex;
-    seenHexes.add(hex);
+    const hex    = ac.hex;
+    const color  = COLOR[type] || '#fff';
     const latlng = [ac.lat, ac.lon];
-    const heading = ac.track || 0;
-    const color = isPolice ? '#00ff88' : isSuspect ? '#ffbb00' : '#4488ff';
+    seen.add(hex);
 
-    // Update or create marker
     if (liveMarkers[hex]) {
       liveMarkers[hex].marker.setLatLng(latlng);
-      liveMarkers[hex].marker.setIcon(makeArrow(color, heading));
+      liveMarkers[hex].marker.setIcon(arrowIcon(color, ac.track));
     } else {
-      const marker = L.marker(latlng, { icon: makeArrow(color, heading) });
-      marker.on('click', () => showDetail(ac, type));
-      if (showLive) marker.addTo(map);
-      liveMarkers[hex] = { marker, type };
+      const m = L.marker(latlng, { icon: arrowIcon(color, ac.track) });
+      m.on('click', () => openDetail(ac, type));
+      if (showLive) m.addTo(map);
+      liveMarkers[hex] = { marker: m };
     }
-    liveMarkers[hex].ac = ac;
+    liveMarkers[hex].ac   = ac;
     liveMarkers[hex].type = type;
-    liveMarkers[hex].lastSeen = now;
 
-    // Record to history
-    if (isPolice || isSuspect) {
-      newHistory.push({ lat: ac.lat, lng: ac.lon, ts: now, hex, type,
-        cs: (ac.flight||'').trim(), alt: ac.alt_baro });
+    // Record police/suspect positions
+    if (type === 'police' || type === 'suspect') {
+      newPts.push({ lat: ac.lat, lng: ac.lon, ts: now, hex, type, cs: ac.flight });
     }
   });
 
-  // Remove stale markers
+  // remove stale
   Object.keys(liveMarkers).forEach(hex => {
-    if (!seenHexes.has(hex)) {
-      map.removeLayer(liveMarkers[hex].marker);
-      delete liveMarkers[hex];
-    }
+    if (!seen.has(hex)) { map.removeLayer(liveMarkers[hex].marker); delete liveMarkers[hex]; }
   });
 
-  // Append history, trim
-  history = [...history, ...newHistory].slice(-MAX_HISTORY);
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(history)); } catch {}
+  // persist
+  if (newPts.length) {
+    history = [...history, ...newPts].slice(-MAX_HISTORY);
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(history)); } catch {}
+    buildHeatmap();
+    drawTimeline();
+  }
 
-  buildHeatmap();
-
-  document.getElementById('count-police').textContent = policeCount;
-  document.getElementById('count-total').textContent  = totalCount;
+  document.getElementById('count-police').textContent = policeN;
+  document.getElementById('count-total').textContent  = heliN;
   document.getElementById('last-update').textContent  = new Date().toLocaleTimeString('en-NZ', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  setStatus('live');
 }
 
-// ─── detail panel ─────────────────────────────────────────────────────────────
-function showDetail(ac, type) {
-  selectedHex = ac.hex;
-  const cs = (ac.flight || '').trim() || '(no callsign)';
+// ─── detail ──────────────────────────────────────────────────────────────────
+function openDetail(ac, type) {
   const logged = history.filter(p => p.hex === ac.hex).length;
-  const statusLabel = type === 'police' ? 'CONFIRMED POLICE' : type === 'suspect' ? 'SUSPECTED' : 'HELICOPTER';
-  const statusColor = type === 'police' ? 'green' : type === 'suspect' ? 'amber' : '';
-
-  document.getElementById('detail-cs').textContent    = cs;
-  document.getElementById('d-hex').textContent        = ac.hex || '—';
-  document.getElementById('d-reg').textContent        = ac.r || '—';
-  document.getElementById('d-type').textContent       = ac.t || '—';
-  document.getElementById('d-alt').textContent        = ac.alt_baro ? `${ac.alt_baro.toLocaleString()} ft` : '—';
-  document.getElementById('d-spd').textContent        = ac.gs ? `${ac.gs} kt` : '—';
-  document.getElementById('d-hdg').textContent        = ac.track ? `${Math.round(ac.track)}°` : '—';
-  document.getElementById('d-status').textContent     = statusLabel;
-  document.getElementById('d-status').className       = `v ${statusColor}`;
-  document.getElementById('d-logged').textContent     = logged;
+  const labels = { police: 'CONFIRMED POLICE', suspect: 'SUSPECTED', heli: 'HELICOPTER' };
+  document.getElementById('d-cs').textContent    = (ac.flight||'').trim() || '(no callsign)';
+  document.getElementById('d-hex').textContent   = ac.hex || '—';
+  document.getElementById('d-reg').textContent   = ac.r || '—';
+  document.getElementById('d-type').textContent  = ac.t || '—';
+  document.getElementById('d-alt').textContent   = ac.alt_baro ? `${ac.alt_baro.toLocaleString()} ft` : '—';
+  document.getElementById('d-spd').textContent   = ac.gs ? `${ac.gs} kt` : '—';
+  document.getElementById('d-hdg').textContent   = ac.track ? `${Math.round(ac.track)}°` : '—';
+  document.getElementById('d-class').textContent = labels[type] || '—';
+  document.getElementById('d-class').className   = `v ${type === 'police' ? 'green' : type === 'suspect' ? 'amber' : 'blue'}`;
+  document.getElementById('d-logged').textContent = logged.toLocaleString();
   document.getElementById('detail').classList.add('visible');
 }
 
-document.getElementById('detail-close').addEventListener('click', () => {
-  document.getElementById('detail').classList.remove('visible');
-  selectedHex = null;
+document.getElementById('detail-close').addEventListener('click', () =>
+  document.getElementById('detail').classList.remove('visible'));
+
+// ─── timeline chart ───────────────────────────────────────────────────────────
+function drawTimeline() {
+  const canvas = document.getElementById('timeline');
+  const ctx    = canvas.getContext('2d');
+  const W      = canvas.offsetWidth;
+  const H      = canvas.offsetHeight;
+  canvas.width  = W * (window.devicePixelRatio || 1);
+  canvas.height = H * (window.devicePixelRatio || 1);
+  ctx.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
+
+  const now      = Date.now();
+  const bucketMs = 3600000; // 1 hour
+  const buckets  = 7 * 24;  // 7 days
+  const startTs  = now - buckets * bucketMs;
+  const counts   = new Array(buckets).fill(0);
+
+  history.forEach(p => {
+    if (p.ts < startTs) return;
+    const idx = Math.floor((p.ts - startTs) / bucketMs);
+    if (idx >= 0 && idx < buckets) counts[idx]++;
+  });
+
+  const maxCount = Math.max(1, ...counts);
+  const bw = W / buckets;
+
+  ctx.clearRect(0, 0, W, H);
+
+  counts.forEach((c, i) => {
+    if (!c) return;
+    const frac = c / maxCount;
+    const x    = i * bw;
+    const bh   = Math.max(2, frac * H);
+    const alpha = 0.3 + frac * 0.7;
+
+    // colour by recency
+    const age = (buckets - i) / buckets;
+    const r   = Math.round(0 + age * 80);
+    const g   = Math.round(255 - age * 120);
+    ctx.fillStyle = `rgba(${r},${g},136,${alpha})`;
+    ctx.fillRect(Math.floor(x) + 0.5, H - bh, Math.max(1, Math.floor(bw) - 1), bh);
+  });
+
+  // day separators
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  ctx.lineWidth   = 1;
+  for (let d = 0; d <= 7; d++) {
+    const x = d * 24 * bw;
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+  }
+
+  // day labels
+  ctx.fillStyle = 'rgba(255,255,255,0.12)';
+  ctx.font      = `${Math.max(8, Math.round(W/90))}px Courier New`;
+  ctx.textAlign = 'left';
+  for (let d = 0; d < 7; d++) {
+    const ts = startTs + d * 24 * 3600000;
+    const label = new Date(ts).toLocaleDateString('en-NZ', { weekday: 'short', day: 'numeric' });
+    ctx.fillText(label, d * 24 * bw + 3, H - 3);
+  }
+}
+
+// ─── time filter ─────────────────────────────────────────────────────────────
+const TIME_FILTERS = {
+  'tf-1h':  3600000,
+  'tf-6h':  6 * 3600000,
+  'tf-24h': 24 * 3600000,
+  'tf-7d':  7 * 24 * 3600000,
+  'tf-all': 0,
+};
+Object.entries(TIME_FILTERS).forEach(([id, ms]) => {
+  document.getElementById(id).addEventListener('click', function() {
+    document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('on'));
+    this.classList.add('on');
+    timeFilter = ms ? Date.now() - ms : 0;
+    buildHeatmap();
+  });
 });
 
-// ─── controls ─────────────────────────────────────────────────────────────────
-function toast(msg, duration = 2000) {
+// ─── main loop ────────────────────────────────────────────────────────────────
+const setStatus = s => (document.getElementById('status-dot').className = s);
+
+async function refresh() {
+  setStatus('loading');
+  try {
+    const aircraft = await fetchLive();
+    renderLive(aircraft);
+    setStatus('live');
+  } catch (e) {
+    setStatus('error');
+    toast('API unavailable — retrying in 45s', 3500);
+    console.error(e);
+  }
+}
+
+// ─── control buttons ─────────────────────────────────────────────────────────
+function toast(msg, ms = 2200) {
   const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), duration);
+  el.textContent = msg; el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), ms);
 }
 
 document.getElementById('btn-heat').addEventListener('click', function() {
-  showHeat = !showHeat;
-  this.classList.toggle('on', showHeat);
-  if (heatLayer) {
-    if (showHeat) heatLayer.addTo(map); else map.removeLayer(heatLayer);
-  }
+  showHeat = !showHeat; this.classList.toggle('on', showHeat);
+  if (heatLayer) { if (showHeat) heatLayer.addTo(map); else map.removeLayer(heatLayer); }
 });
 
 document.getElementById('btn-live').addEventListener('click', function() {
-  showLive = !showLive;
-  this.classList.toggle('on', showLive);
+  showLive = !showLive; this.classList.toggle('on', showLive);
   Object.values(liveMarkers).forEach(({ marker }) => {
     if (showLive) marker.addTo(map); else map.removeLayer(marker);
   });
 });
 
 document.getElementById('btn-all').addEventListener('click', function() {
-  showAllNZ = !showAllNZ;
-  this.classList.toggle('on', showAllNZ);
-  toast(showAllNZ ? 'Showing all NZ air traffic' : 'Showing police / suspected only');
-  refresh();
+  showAllHeli = !showAllHeli; this.classList.toggle('on', showAllHeli);
+  toast(showAllHeli ? 'Showing all helicopters' : 'Police / suspected only');
 });
 
 document.getElementById('btn-clear').addEventListener('click', () => {
-  if (!confirm('Clear all heatmap history? This cannot be undone.')) return;
-  history = [];
-  localStorage.removeItem(STORAGE_KEY);
-  buildHeatmap();
-  document.getElementById('count-heat').textContent = '0';
+  if (!confirm('Clear all stored position history?')) return;
+  history = []; localStorage.removeItem(STORAGE_KEY);
+  buildHeatmap(); drawTimeline();
   toast('History cleared');
 });
 
-// ─── main loop ────────────────────────────────────────────────────────────────
-async function refresh() {
-  try {
-    const aircraft = await fetchAircraft();
-    renderAircraft(aircraft);
-  } catch (e) {
-    setStatus('error');
-    toast('API error — retrying in 45s', 3000);
-    console.error(e);
+// ─── OpenSky historical load ──────────────────────────────────────────────────
+document.getElementById('btn-history').addEventListener('click', () =>
+  document.getElementById('modal').classList.add('open'));
+document.getElementById('osky-cancel').addEventListener('click', () =>
+  document.getElementById('modal').classList.remove('open'));
+
+document.getElementById('osky-load').addEventListener('click', async () => {
+  const user = document.getElementById('osky-user').value.trim();
+  const pass = document.getElementById('osky-pass').value;
+  if (!user || !pass) { toast('Enter credentials'); return; }
+
+  const auth    = btoa(`${user}:${pass}`);
+  const log     = document.getElementById('progress-log');
+  const loadBtn = document.getElementById('osky-load');
+  log.className = 'visible'; log.innerHTML = '';
+  loadBtn.disabled = true; loadBtn.textContent = 'Fetching…';
+
+  function logLine(msg, cls = '') {
+    log.innerHTML += `<div class="${cls}">${msg}</div>`;
+    log.scrollTop = log.scrollHeight;
   }
-}
 
-// Initial build from stored history
+  const endTs   = Math.floor(Date.now() / 1000);
+  const beginTs = endTs - 7 * 24 * 3600;
+  const hexList = [...KNOWN_POLICE_HEX];
+  const newPts  = [];
+
+  for (const hex of hexList) {
+    logLine(`→ flights for ${hex}…`, 'inf');
+    try {
+      const fResp = await fetch(
+        `https://opensky-network.org/api/flights/aircraft?icao24=${hex}&begin=${beginTs}&end=${endTs}`,
+        { headers: { Authorization: `Basic ${auth}` } }
+      );
+      if (!fResp.ok) { logLine(`  ✗ HTTP ${fResp.status}`, 'err'); continue; }
+      const flights = await fResp.json();
+      if (!flights?.length) { logLine(`  — no flights`, 'inf'); continue; }
+      logLine(`  ${flights.length} flight(s) found`, 'ok');
+
+      for (const fl of flights.slice(0, 20)) { // cap per-hex
+        const ts = fl.firstSeen || fl.lastSeen;
+        await new Promise(r => setTimeout(r, 300)); // rate limit
+        try {
+          const tResp = await fetch(
+            `https://opensky-network.org/api/tracks/all?icao24=${hex}&time=${ts}`,
+            { headers: { Authorization: `Basic ${auth}` } }
+          );
+          if (!tResp.ok) continue;
+          const track = await tResp.json();
+          if (!track?.path?.length) continue;
+          track.path.forEach(p => {
+            if (p[1] && p[2]) {
+              newPts.push({ lat: p[1], lng: p[2], ts: p[0] * 1000, hex, type: 'police', cs: '' });
+            }
+          });
+          logLine(`    ✓ +${track.path.length} pts`, 'ok');
+        } catch { logLine(`    ✗ track fetch failed`, 'err'); }
+      }
+    } catch (e) { logLine(`  ✗ ${e.message}`, 'err'); }
+  }
+
+  if (newPts.length) {
+    history = [...history, ...newPts].slice(-MAX_HISTORY);
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(history)); } catch {}
+    buildHeatmap(); drawTimeline();
+    logLine(`✓ Saved ${newPts.length} historical positions`, 'ok');
+    toast(`Loaded ${newPts.length} historical positions`);
+  } else {
+    logLine('No positions loaded. Check credentials or try again later.', 'err');
+    toast('No data loaded — check credentials', 3000);
+  }
+
+  loadBtn.disabled = false; loadBtn.textContent = 'Fetch History';
+});
+
+// ─── resize timeline ──────────────────────────────────────────────────────────
+window.addEventListener('resize', drawTimeline);
+
+// ─── boot ────────────────────────────────────────────────────────────────────
 buildHeatmap();
-document.getElementById('count-heat').textContent = history.length.toLocaleString();
-
-// Start
+drawTimeline();
 refresh();
-setInterval(refresh, REFRESH_INTERVAL);
+setInterval(refresh, REFRESH_MS);
 </script>
 </body>
 </html>
