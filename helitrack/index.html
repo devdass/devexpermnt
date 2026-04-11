@@ -297,59 +297,63 @@ function isRotorcraft(ac) {
 }
 
 // ─── API cascade ──────────────────────────────────────────────────────────────
+// Confirmed working (tested): airplanes.live (CORS ✓), OpenSky (CORS ✓)
+// adsb.fi removed — returns 404
 async function fetchLive() {
-  const timeout = ms => new Promise((_, r) => setTimeout(() => r(new Error('timeout')), ms));
+  const withTimeout = (p, ms) => Promise.race([p, new Promise((_, r) => setTimeout(() => r(new Error('timeout')), ms))]);
 
-  // 1 — airplanes.live (most reliable, no auth)
+  // 1 — airplanes.live: free, CORS *, returns ft for alt_baro
   try {
-    const resp = await Promise.race([
-      fetch('https://api.airplanes.live/v2/point/-41.28/174.78/900'),
-      timeout(10000),
-    ]);
-    if (!resp.ok) throw new Error(resp.status);
+    const resp = await withTimeout(fetch('https://api.airplanes.live/v2/point/-41.28/174.78/900'), 10000);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const d = await resp.json();
-    if (d.ac?.length) return normalise(d.ac, 'airplanes.live');
-  } catch {}
+    if (d.ac?.length) {
+      return d.ac
+        .filter(a => a.lat && a.lon && a.alt_baro !== 'ground' && a.alt_baro !== undefined)
+        .map(a => ({
+          hex:      (a.hex || '').toLowerCase(),
+          flight:   (a.flight || '').trim(),
+          r:        a.r || '',
+          t:        a.t || '',
+          category: a.category || '',
+          desc:     a.desc || '',
+          lat:      a.lat,
+          lon:      a.lon,
+          alt_ft:   typeof a.alt_baro === 'number' ? Math.round(a.alt_baro) : null, // already feet
+          gs:       a.gs ? Math.round(a.gs) : null,
+          track:    a.track || 0,
+          _src:     'airplanes.live',
+        }));
+    }
+  } catch (e) { console.warn('airplanes.live failed:', e.message); }
 
-  // 2 — adsb.fi
+  // 2 — OpenSky anonymous: alt in metres, convert to feet
   try {
-    const resp = await Promise.race([
-      fetch('https://api.adsb.fi/v1/aircraft?lat=-41.28&lon=174.78&radius=900'),
-      timeout(10000),
-    ]);
-    if (!resp.ok) throw new Error(resp.status);
+    const resp = await withTimeout(
+      fetch('https://opensky-network.org/api/states/all?lamin=-47.5&lamax=-34&lomin=166&lomax=178.5'),
+      12000
+    );
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const d = await resp.json();
-    if (d.ac?.length) return normalise(d.ac, 'adsb.fi');
-  } catch {}
+    return (d.states || [])
+      .filter(s => s[5] != null && s[6] != null && s[8] === false) // s[8]=on_ground
+      .map(s => ({
+        hex:      (s[0] || '').toLowerCase(),
+        flight:   (s[1] || '').trim(),
+        r:        '',
+        t:        '',
+        category: '',
+        desc:     '',
+        lat:      s[6],
+        lon:      s[5],
+        alt_ft:   s[7] != null ? Math.round(s[7] * 3.281) : null, // metres → feet
+        gs:       s[9] != null ? Math.round(s[9] * 1.944) : null, // m/s → knots
+        track:    s[10] || 0,
+        _src:     'opensky',
+      }));
+  } catch (e) { console.warn('OpenSky failed:', e.message); }
 
-  // 3 — OpenSky (anonymous, rate-limited)
-  const resp = await Promise.race([
-    fetch('https://opensky-network.org/api/states/all?lamin=-47.5&lamax=-34&lomin=166&lomax=178.5'),
-    timeout(12000),
-  ]);
-  if (!resp.ok) throw new Error('All APIs failed');
-  const d = await resp.json();
-  return (d.states || [])
-    .filter(s => s[5] && s[6] && !s[8])
-    .map(s => ({
-      hex: s[0], flight: (s[1]||'').trim(), r: '', t: '', category: '', desc: '',
-      lat: s[6], lon: s[5],
-      alt_baro: s[7] ? Math.round(s[7] * 3.281) : null,
-      gs: s[9] ? Math.round(s[9] * 1.944) : null,
-      track: s[10],
-    }));
-}
-
-function normalise(ac, src) {
-  return ac.filter(a => a.lat && a.lon && !a.ground && a.alt_baro !== 'ground').map(a => ({
-    hex: a.hex, flight: (a.flight||'').trim(), r: a.r||'', t: a.t||'',
-    category: a.category||'', desc: a.desc||'',
-    lat: a.lat, lon: a.lon,
-    alt_baro: a.alt_baro ? (typeof a.alt_baro === 'number' ? Math.round(a.alt_baro) : null) : null,
-    gs: a.gs ? Math.round(a.gs) : null,
-    track: a.track || 0,
-    _src: src,
-  }));
+  throw new Error('All APIs failed');
 }
 
 // ─── heatmap ──────────────────────────────────────────────────────────────────
@@ -387,32 +391,51 @@ function arrowIcon(color, heading) {
   });
 }
 
-const COLOR = { police: '#00ff88', suspect: '#ffbb00', heli: '#4499ff' };
+const COLOR = { police: '#00ff88', suspect: '#ffbb00', heli: '#4499ff', fixed: '#223344' };
+
+function dimDot(color) {
+  return L.divIcon({
+    className: '', iconSize: [8, 8], iconAnchor: [4, 4],
+    html: `<svg width="8" height="8" viewBox="0 0 8 8" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="4" cy="4" r="3" fill="${color}" fill-opacity="0.35" stroke="${color}" stroke-width="0.5" stroke-opacity="0.5"/>
+    </svg>`,
+  });
+}
 
 function renderLive(aircraft) {
-  const now = Date.now();
+  const now  = Date.now();
   const seen = new Set();
   let policeN = 0, heliN = 0;
   const newPts = [];
 
   aircraft.forEach(ac => {
-    const type  = classify(ac);
-    if (type === 'fixed') return;
-    if (!showAllHeli && type === 'heli') return;
-
-    heliN++;
-    if (type === 'police' || type === 'suspect') policeN++;
-
+    const type   = classify(ac);
     const hex    = ac.hex;
-    const color  = COLOR[type] || '#fff';
     const latlng = [ac.lat, ac.lon];
     seen.add(hex);
 
+    // Always show everything so user can see the feed is live.
+    // Police/heli = coloured arrows. Fixed-wing = tiny dim dot.
+    const isHeli   = (type === 'police' || type === 'suspect' || type === 'heli');
+    const isPolice = (type === 'police' || type === 'suspect');
+    if (isHeli) heliN++;
+    if (isPolice) policeN++;
+
+    // Skip non-heli if "heli only" mode is off (btn-all toggled off)
+    if (!showAllHeli && type === 'fixed') {
+      // still show but as a tiny dim dot so map isn't blank
+    }
+
+    const color = COLOR[type] || '#334';
+    const icon  = isHeli
+      ? arrowIcon(color, ac.track)
+      : dimDot(color);
+
     if (liveMarkers[hex]) {
       liveMarkers[hex].marker.setLatLng(latlng);
-      liveMarkers[hex].marker.setIcon(arrowIcon(color, ac.track));
+      liveMarkers[hex].marker.setIcon(icon);
     } else {
-      const m = L.marker(latlng, { icon: arrowIcon(color, ac.track) });
+      const m = L.marker(latlng, { icon, zIndexOffset: isHeli ? 100 : 0 });
       m.on('click', () => openDetail(ac, type));
       if (showLive) m.addTo(map);
       liveMarkers[hex] = { marker: m };
@@ -420,8 +443,7 @@ function renderLive(aircraft) {
     liveMarkers[hex].ac   = ac;
     liveMarkers[hex].type = type;
 
-    // Record police/suspect positions
-    if (type === 'police' || type === 'suspect') {
+    if (isPolice) {
       newPts.push({ lat: ac.lat, lng: ac.lon, ts: now, hex, type, cs: ac.flight });
     }
   });
@@ -431,7 +453,7 @@ function renderLive(aircraft) {
     if (!seen.has(hex)) { map.removeLayer(liveMarkers[hex].marker); delete liveMarkers[hex]; }
   });
 
-  // persist
+  // persist new police positions
   if (newPts.length) {
     history = [...history, ...newPts].slice(-MAX_HISTORY);
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(history)); } catch {}
@@ -439,9 +461,10 @@ function renderLive(aircraft) {
     drawTimeline();
   }
 
-  document.getElementById('count-police').textContent = policeN;
-  document.getElementById('count-total').textContent  = heliN;
-  document.getElementById('last-update').textContent  = new Date().toLocaleTimeString('en-NZ', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const src = aircraft[0]?._src || '';
+  document.getElementById('count-police').textContent = policeN || '—';
+  document.getElementById('count-total').textContent  = aircraft.length + (src ? ` (${src})` : '');
+  document.getElementById('last-update').textContent  = new Date().toLocaleTimeString('en-NZ', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
 }
 
 // ─── detail ──────────────────────────────────────────────────────────────────
@@ -452,7 +475,7 @@ function openDetail(ac, type) {
   document.getElementById('d-hex').textContent   = ac.hex || '—';
   document.getElementById('d-reg').textContent   = ac.r || '—';
   document.getElementById('d-type').textContent  = ac.t || '—';
-  document.getElementById('d-alt').textContent   = ac.alt_baro ? `${ac.alt_baro.toLocaleString()} ft` : '—';
+  document.getElementById('d-alt').textContent   = ac.alt_ft ? `${ac.alt_ft.toLocaleString()} ft` : '—';
   document.getElementById('d-spd').textContent   = ac.gs ? `${ac.gs} kt` : '—';
   document.getElementById('d-hdg').textContent   = ac.track ? `${Math.round(ac.track)}°` : '—';
   document.getElementById('d-class').textContent = labels[type] || '—';
