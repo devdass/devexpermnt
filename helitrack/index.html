@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>HELITRACK — NZ Police Air</title>
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --green: #00ff88;
+      --amber: #ffbb00;
+      --red:   #ff4444;
+      --bg:    #0a0a0f;
+      --panel: rgba(10,10,18,0.92);
+      --border: rgba(255,255,255,0.07);
+      --mono: 'Courier New', monospace;
+    }
+
+    html, body { height: 100%; background: var(--bg); color: #ccc; font-family: var(--mono); overflow: hidden; }
+
+    #map { position: absolute; inset: 0; z-index: 0; }
+
+    /* ── top bar ── */
+    #topbar {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      z-index: 500;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.75rem 1rem;
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(8px);
+    }
+
+    #topbar h1 {
+      font-size: 0.85rem;
+      letter-spacing: 0.3em;
+      color: var(--green);
+      text-shadow: 0 0 10px var(--green);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .sep { width: 1px; height: 1.2rem; background: var(--border); flex-shrink: 0; }
+
+    .stat {
+      display: flex;
+      flex-direction: column;
+      gap: 0.05rem;
+      flex-shrink: 0;
+    }
+    .stat-label { font-size: 0.5rem; letter-spacing: 0.2em; color: #444; text-transform: uppercase; }
+    .stat-val   { font-size: 0.75rem; letter-spacing: 0.05em; color: #ccc; }
+    .stat-val.green { color: var(--green); }
+    .stat-val.amber { color: var(--amber); }
+
+    #status-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: #444; flex-shrink: 0;
+      transition: background 0.4s, box-shadow 0.4s;
+    }
+    #status-dot.live { background: var(--green); box-shadow: 0 0 8px var(--green); }
+    #status-dot.error { background: var(--red); box-shadow: 0 0 8px var(--red); }
+    #status-dot.loading { background: var(--amber); box-shadow: 0 0 8px var(--amber); animation: blink 0.6s infinite; }
+
+    @keyframes blink { 50% { opacity: 0.3; } }
+
+    .spacer { flex: 1; }
+
+    /* ── controls ── */
+    .btn {
+      padding: 0.3rem 0.7rem;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: #666;
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.15em;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .btn:hover { border-color: var(--green); color: var(--green); }
+    .btn.on    { border-color: var(--green); color: var(--green); background: rgba(0,255,136,0.07); }
+    .btn.danger:hover { border-color: var(--red); color: var(--red); }
+
+    /* ── legend ── */
+    #legend {
+      position: absolute;
+      bottom: 2.5rem;
+      left: 1rem;
+      z-index: 500;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(8px);
+      padding: 0.7rem 0.9rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .legend-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.58rem;
+      letter-spacing: 0.1em;
+      color: #666;
+      text-transform: uppercase;
+    }
+
+    .legend-dot {
+      width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+    }
+
+    /* ── detail panel ── */
+    #detail {
+      position: absolute;
+      bottom: 2.5rem;
+      right: 1rem;
+      z-index: 500;
+      width: 230px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(8px);
+      padding: 0.85rem;
+      display: none;
+    }
+
+    #detail.visible { display: block; }
+
+    #detail h3 {
+      font-size: 0.7rem;
+      letter-spacing: 0.25em;
+      color: var(--green);
+      margin-bottom: 0.6rem;
+    }
+
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.6rem;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.3rem;
+    }
+    .detail-row .k { color: #444; }
+    .detail-row .v { color: #ccc; text-align: right; }
+    .detail-row .v.green { color: var(--green); }
+    .detail-row .v.amber { color: var(--amber); }
+
+    #detail-close {
+      position: absolute; top: 0.5rem; right: 0.6rem;
+      background: none; border: none; color: #444;
+      font-size: 0.9rem; cursor: pointer; font-family: var(--mono);
+    }
+    #detail-close:hover { color: #fff; }
+
+    /* ── toast ── */
+    #toast {
+      position: absolute;
+      top: 4rem; left: 50%;
+      transform: translateX(-50%);
+      background: var(--panel);
+      border: 1px solid var(--border);
+      padding: 0.4rem 1rem;
+      font-size: 0.6rem;
+      letter-spacing: 0.15em;
+      color: #666;
+      z-index: 600;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s;
+      white-space: nowrap;
+    }
+    #toast.show { opacity: 1; }
+
+    /* mobile tweaks */
+    @media (max-width: 600px) {
+      #topbar { flex-wrap: wrap; gap: 0.5rem; padding: 0.6rem 0.8rem; }
+      .stat { display: none; }
+      #stat-police, #stat-total { display: flex; }
+      #legend { font-size: 0.5rem; }
+      #detail { width: calc(100vw - 2rem); right: 1rem; bottom: 5rem; }
+    }
+
+    /* leaflet overrides */
+    .leaflet-control-attribution { background: rgba(0,0,0,0.5) !important; color: #333 !important; font-size: 9px !important; }
+    .leaflet-control-attribution a { color: #555 !important; }
+    .leaflet-control-zoom a { background: var(--panel) !important; color: #666 !important; border-color: var(--border) !important; }
+    .leaflet-control-zoom a:hover { color: var(--green) !important; }
+  </style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<div id="topbar">
+  <div id="status-dot"></div>
+  <h1>HELITRACK</h1>
+  <div class="sep"></div>
+
+  <div class="stat" id="stat-police">
+    <div class="stat-label">Police</div>
+    <div class="stat-val green" id="count-police">—</div>
+  </div>
+  <div class="stat" id="stat-total">
+    <div class="stat-label">NZ Air</div>
+    <div class="stat-val" id="count-total">—</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Heat pts</div>
+    <div class="stat-val amber" id="count-heat">—</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Updated</div>
+    <div class="stat-val" id="last-update">—</div>
+  </div>
+
+  <div class="spacer"></div>
+
+  <button class="btn on" id="btn-heat">Heatmap</button>
+  <button class="btn on" id="btn-live">Live</button>
+  <button class="btn"    id="btn-all">All NZ Air</button>
+  <button class="btn danger" id="btn-clear">Clear History</button>
+</div>
+
+<div id="legend">
+  <div class="legend-row"><div class="legend-dot" style="background:#00ff88;box-shadow:0 0 6px #00ff88"></div>NZ Police (confirmed)</div>
+  <div class="legend-row"><div class="legend-dot" style="background:#ffbb00;box-shadow:0 0 6px #ffbb00"></div>Suspected / unlisted</div>
+  <div class="legend-row"><div class="legend-dot" style="background:#4488ff;box-shadow:0 0 6px #4488ff"></div>Other NZ helicopter</div>
+  <div class="legend-row" id="legend-heat"><div class="legend-dot" style="background:linear-gradient(90deg,#0000ff,#ff0000);border-radius:2px;width:24px;height:6px"></div>Heatmap intensity</div>
+</div>
+
+<div id="detail">
+  <button id="detail-close">×</button>
+  <h3 id="detail-cs">—</h3>
+  <div class="detail-row"><span class="k">Hex</span><span class="v" id="d-hex">—</span></div>
+  <div class="detail-row"><span class="k">Reg</span><span class="v" id="d-reg">—</span></div>
+  <div class="detail-row"><span class="k">Type</span><span class="v" id="d-type">—</span></div>
+  <div class="detail-row"><span class="k">Alt (ft)</span><span class="v" id="d-alt">—</span></div>
+  <div class="detail-row"><span class="k">Speed (kt)</span><span class="v" id="d-spd">—</span></div>
+  <div class="detail-row"><span class="k">Heading</span><span class="v" id="d-hdg">—</span></div>
+  <div class="detail-row"><span class="k">Status</span><span class="v green" id="d-status">—</span></div>
+  <div class="detail-row"><span class="k">Positions logged</span><span class="v amber" id="d-logged">—</span></div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ─── map setup ────────────────────────────────────────────────────────────────
+const map = L.map('map', {
+  center: [-41.28, 174.78],
+  zoom: 6,
+  zoomControl: false,
+  preferCanvas: true,
+});
+
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  attribution: '© <a href="https://openstreetmap.org">OSM</a> © <a href="https://carto.com">CartoDB</a>',
+  subdomains: 'abcd',
+  maxZoom: 19,
+}).addTo(map);
+
+L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+// ─── state ────────────────────────────────────────────────────────────────────
+const STORAGE_KEY = 'helitrack_nz_v2';
+const MAX_HISTORY = 15000;
+const REFRESH_INTERVAL = 45000; // 45s
+
+let history = [];
+try { history = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch {}
+
+let heatLayer = null;
+let liveMarkers = {};
+let trackLine = null;
+let selectedHex = null;
+let showHeat = true;
+let showLive = true;
+let showAllNZ = false;
+
+// ─── police identification ─────────────────────────────────────────────────
+// NZ Police callsigns: POLAIR + number, or NZPOLICE, or known registrations
+const POLICE_CALLSIGN_RE = /^(POLAIR|NZP\s*\d|NZPOLICE|N\s*ZP)/i;
+
+// Known NZ Police ICAO24 hex codes (ADS-B Exchange community data)
+// NZ country code = C8xxxx
+const KNOWN_POLICE = new Set([
+  'c82159', // ZK-HNZ  — Auckland Police
+  'c8216d', // ZK-HCO  — Wellington Police
+  'c821b6', // ZK-HQN  — Christchurch Police
+  'c82043', // ZK-HBA  — Police
+  'c820e3', // ZK-HKA  — Police
+]);
+
+function classifyAircraft(ac) {
+  const hex = (ac.hex || '').toLowerCase();
+  const cs  = (ac.flight || '').trim();
+  const reg = (ac.r || '').trim();
+
+  if (KNOWN_POLICE.has(hex) || POLICE_CALLSIGN_RE.test(cs) || /^ZK-H[NCQ]/i.test(reg)) {
+    return 'police';
+  }
+  // NZ-registered helicopter (hex C8xxxx) with no public callsign = suspect
+  if (hex.startsWith('c8') && !cs && isRotorcraft(ac)) {
+    return 'suspect';
+  }
+  if (isRotorcraft(ac)) return 'heli';
+  return 'fixed';
+}
+
+function isRotorcraft(ac) {
+  return ac.category === 'A7'
+    || (ac.t && /^(R|EC|AS|AW|B0|B2|B4|B47|S7|S9|H1|H2|MD|RH|UH|CH)/i.test(ac.t))
+    || (ac.desc && /heli|rotor/i.test(ac.desc));
+}
+
+// ─── marker icons ─────────────────────────────────────────────────────────────
+function makeIcon(color, glow, size = 10) {
+  return L.divIcon({
+    className: '',
+    iconSize: [size * 2, size * 2],
+    iconAnchor: [size, size],
+    html: `<svg width="${size*2}" height="${size*2}" viewBox="0 0 ${size*2} ${size*2}" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="${size}" cy="${size}" r="${size - 2}" fill="${color}" fill-opacity="0.18" stroke="${color}" stroke-width="1.5"/>
+      <circle cx="${size}" cy="${size}" r="${size/3}" fill="${color}" filter="url(#g)"/>
+      <defs><filter id="g"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+    </svg>`,
+  });
+}
+
+const ICONS = {
+  police:  makeIcon('#00ff88', '#00ff88', 13),
+  suspect: makeIcon('#ffbb00', '#ffbb00', 11),
+  heli:    makeIcon('#4488ff', '#4488ff', 10),
+};
+
+// heading arrow icon
+function makeArrow(color, heading) {
+  const r = 14;
+  return L.divIcon({
+    className: '',
+    iconSize: [r*2, r*2],
+    iconAnchor: [r, r],
+    html: `<svg width="${r*2}" height="${r*2}" viewBox="0 0 ${r*2} ${r*2}" xmlns="http://www.w3.org/2000/svg">
+      <g transform="rotate(${heading}, ${r}, ${r})">
+        <polygon points="${r},2 ${r+5},${r+7} ${r},${r+3} ${r-5},${r+7}" fill="${color}" fill-opacity="0.9"/>
+      </g>
+    </svg>`,
+  });
+}
+
+// ─── heatmap ──────────────────────────────────────────────────────────────────
+function buildHeatmap() {
+  if (heatLayer) map.removeLayer(heatLayer);
+
+  // Weight police hits 3x
+  const pts = history.map(p => [
+    p.lat, p.lng,
+    p.type === 'police' ? 1.0 : p.type === 'suspect' ? 0.6 : 0.3
+  ]);
+
+  if (!pts.length) return;
+
+  heatLayer = L.heatLayer(pts, {
+    radius: 22,
+    blur: 18,
+    maxZoom: 10,
+    max: 1.0,
+    gradient: { 0.0: '#000080', 0.3: '#0000ff', 0.5: '#00ffff', 0.7: '#ffff00', 1.0: '#ff0000' },
+  });
+
+  if (showHeat) heatLayer.addTo(map);
+  document.getElementById('count-heat').textContent = history.length.toLocaleString();
+}
+
+// ─── fetch aircraft ───────────────────────────────────────────────────────────
+const setStatus = s => {
+  const d = document.getElementById('status-dot');
+  d.className = s;
+};
+
+async function fetchAircraft() {
+  setStatus('loading');
+  try {
+    // ADSB.fi — free, CORS-open, includes category field
+    const url = 'https://api.adsb.fi/v1/aircraft?lat=-41.28&lon=174.78&radius=900';
+    const resp = await fetch(url, { signal: AbortSignal.timeout(12000) });
+    if (!resp.ok) throw new Error(resp.status);
+    const data = await resp.json();
+    return (data.ac || []).filter(a => a.lat && a.lon && !a.ground);
+  } catch (e) {
+    // fallback: OpenSky
+    try {
+      const url2 = 'https://opensky-network.org/api/states/all?lamin=-47.5&lamax=-34&lomin=166&lomax=178.5';
+      const resp2 = await fetch(url2, { signal: AbortSignal.timeout(12000) });
+      const data2 = await resp2.json();
+      return (data2.states || [])
+        .filter(s => s[5] && s[6] && !s[8])
+        .map(s => ({
+          hex: s[0], flight: (s[1]||'').trim(), r: '',
+          lat: s[6], lon: s[5],
+          alt_baro: s[7] ? Math.round(s[7] * 3.281) : null,
+          gs: s[9] ? Math.round(s[9] * 1.944) : null,
+          track: s[10], t: '', category: '',
+        }));
+    } catch { throw new Error('Both APIs failed'); }
+  }
+}
+
+// ─── render aircraft ──────────────────────────────────────────────────────────
+function renderAircraft(aircraft) {
+  const now = Date.now();
+  const seenHexes = new Set();
+  let policeCount = 0, totalCount = 0;
+  const newHistory = [];
+
+  aircraft.forEach(ac => {
+    const type = classifyAircraft(ac);
+    const isPolice = type === 'police';
+    const isSuspect = type === 'suspect';
+    const isHeli = type === 'heli';
+
+    // Filter display
+    if (!showAllNZ && !isPolice && !isSuspect) return;
+    if (type === 'fixed') return;
+
+    totalCount++;
+    if (isPolice || isSuspect) policeCount++;
+
+    const hex = ac.hex;
+    seenHexes.add(hex);
+    const latlng = [ac.lat, ac.lon];
+    const heading = ac.track || 0;
+    const color = isPolice ? '#00ff88' : isSuspect ? '#ffbb00' : '#4488ff';
+
+    // Update or create marker
+    if (liveMarkers[hex]) {
+      liveMarkers[hex].marker.setLatLng(latlng);
+      liveMarkers[hex].marker.setIcon(makeArrow(color, heading));
+    } else {
+      const marker = L.marker(latlng, { icon: makeArrow(color, heading) });
+      marker.on('click', () => showDetail(ac, type));
+      if (showLive) marker.addTo(map);
+      liveMarkers[hex] = { marker, type };
+    }
+    liveMarkers[hex].ac = ac;
+    liveMarkers[hex].type = type;
+    liveMarkers[hex].lastSeen = now;
+
+    // Record to history
+    if (isPolice || isSuspect) {
+      newHistory.push({ lat: ac.lat, lng: ac.lon, ts: now, hex, type,
+        cs: (ac.flight||'').trim(), alt: ac.alt_baro });
+    }
+  });
+
+  // Remove stale markers
+  Object.keys(liveMarkers).forEach(hex => {
+    if (!seenHexes.has(hex)) {
+      map.removeLayer(liveMarkers[hex].marker);
+      delete liveMarkers[hex];
+    }
+  });
+
+  // Append history, trim
+  history = [...history, ...newHistory].slice(-MAX_HISTORY);
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(history)); } catch {}
+
+  buildHeatmap();
+
+  document.getElementById('count-police').textContent = policeCount;
+  document.getElementById('count-total').textContent  = totalCount;
+  document.getElementById('last-update').textContent  = new Date().toLocaleTimeString('en-NZ', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  setStatus('live');
+}
+
+// ─── detail panel ─────────────────────────────────────────────────────────────
+function showDetail(ac, type) {
+  selectedHex = ac.hex;
+  const cs = (ac.flight || '').trim() || '(no callsign)';
+  const logged = history.filter(p => p.hex === ac.hex).length;
+  const statusLabel = type === 'police' ? 'CONFIRMED POLICE' : type === 'suspect' ? 'SUSPECTED' : 'HELICOPTER';
+  const statusColor = type === 'police' ? 'green' : type === 'suspect' ? 'amber' : '';
+
+  document.getElementById('detail-cs').textContent    = cs;
+  document.getElementById('d-hex').textContent        = ac.hex || '—';
+  document.getElementById('d-reg').textContent        = ac.r || '—';
+  document.getElementById('d-type').textContent       = ac.t || '—';
+  document.getElementById('d-alt').textContent        = ac.alt_baro ? `${ac.alt_baro.toLocaleString()} ft` : '—';
+  document.getElementById('d-spd').textContent        = ac.gs ? `${ac.gs} kt` : '—';
+  document.getElementById('d-hdg').textContent        = ac.track ? `${Math.round(ac.track)}°` : '—';
+  document.getElementById('d-status').textContent     = statusLabel;
+  document.getElementById('d-status').className       = `v ${statusColor}`;
+  document.getElementById('d-logged').textContent     = logged;
+  document.getElementById('detail').classList.add('visible');
+}
+
+document.getElementById('detail-close').addEventListener('click', () => {
+  document.getElementById('detail').classList.remove('visible');
+  selectedHex = null;
+});
+
+// ─── controls ─────────────────────────────────────────────────────────────────
+function toast(msg, duration = 2000) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), duration);
+}
+
+document.getElementById('btn-heat').addEventListener('click', function() {
+  showHeat = !showHeat;
+  this.classList.toggle('on', showHeat);
+  if (heatLayer) {
+    if (showHeat) heatLayer.addTo(map); else map.removeLayer(heatLayer);
+  }
+});
+
+document.getElementById('btn-live').addEventListener('click', function() {
+  showLive = !showLive;
+  this.classList.toggle('on', showLive);
+  Object.values(liveMarkers).forEach(({ marker }) => {
+    if (showLive) marker.addTo(map); else map.removeLayer(marker);
+  });
+});
+
+document.getElementById('btn-all').addEventListener('click', function() {
+  showAllNZ = !showAllNZ;
+  this.classList.toggle('on', showAllNZ);
+  toast(showAllNZ ? 'Showing all NZ air traffic' : 'Showing police / suspected only');
+  refresh();
+});
+
+document.getElementById('btn-clear').addEventListener('click', () => {
+  if (!confirm('Clear all heatmap history? This cannot be undone.')) return;
+  history = [];
+  localStorage.removeItem(STORAGE_KEY);
+  buildHeatmap();
+  document.getElementById('count-heat').textContent = '0';
+  toast('History cleared');
+});
+
+// ─── main loop ────────────────────────────────────────────────────────────────
+async function refresh() {
+  try {
+    const aircraft = await fetchAircraft();
+    renderAircraft(aircraft);
+  } catch (e) {
+    setStatus('error');
+    toast('API error — retrying in 45s', 3000);
+    console.error(e);
+  }
+}
+
+// Initial build from stored history
+buildHeatmap();
+document.getElementById('count-heat').textContent = history.length.toLocaleString();
+
+// Start
+refresh();
+setInterval(refresh, REFRESH_INTERVAL);
+</script>
+</body>
+</html>
