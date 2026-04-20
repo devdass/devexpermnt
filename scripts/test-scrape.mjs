@@ -6,6 +6,7 @@
 // listing (cars, bikes, etc.).
 
 import { scrapeListings } from "../scraper/trademe-client.js";
+import { extractListing } from "../scraper/extract.js";
 
 const MAX = 20;
 
@@ -68,4 +69,22 @@ if (bad > 0) {
 }
 
 const withPrice = listings.filter((l) => l.StartPrice || l.BuyNowPrice).length;
-console.log(`[test] PASS: ${listings.length} Apple listings, ${withPrice} with prices.`);
+console.log(`[test] Raw scraper: ${listings.length} Apple listings, ${withPrice} with prices.`);
+
+// Now run through extract/filter to show what would actually reach the site
+console.log(`\n=== After extract filter (chip + Mac model required, accessories excluded) ===\n`);
+const extracted = listings
+  .map((raw) => extractListing(raw, new Date().toISOString()))
+  .filter(Boolean);
+
+if (extracted.length === 0) {
+  console.log("(nothing survived — all were Intel, accessories, or missed tokens)");
+} else {
+  for (const l of extracted) {
+    console.log(
+      `${l.id} | ${l.chip || "?"} | ${l.model || "?"} | ${l.ram_gb ? l.ram_gb + "GB" : "?GB"} | $${l.price_nzd}`
+    );
+    console.log(`    ${l.title.substring(0, 80)}`);
+  }
+}
+console.log(`\n[test] PASS: ${listings.length} raw → ${extracted.length} post-filter Apple Silicon Macs.`);
