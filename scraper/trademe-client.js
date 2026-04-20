@@ -1,8 +1,10 @@
 import { chromium } from "playwright";
 
 const BASE_URL = "https://www.trademe.co.nz";
-// Apple computers category — human should verify this path is correct
-const SEARCH_URL = `${BASE_URL}/a/marketplace/computers/apple`;
+const CATEGORY_URLS = [
+  `${BASE_URL}/a/marketplace/computers/desktops/apple-desktops`,
+  `${BASE_URL}/a/marketplace/computers/laptops/laptops/apple`,
+];
 const MAX_LISTINGS = 500;
 const PAGE_DELAY_MS = 2000;
 
@@ -67,21 +69,25 @@ export async function scrapeListings({ maxListings = MAX_LISTINGS, visitDetailPa
   const page = await context.newPage();
 
   const allRaw = [];
-  let pageNum = 1;
+  const seenIds = new Set();
 
   try {
-    while (allRaw.length < maxListings) {
-      const url = pageNum === 1 ? SEARCH_URL : `${SEARCH_URL}?page=${pageNum}`;
-      console.log(`[scraper] Fetching page ${pageNum}: ${url}`);
+    for (const categoryUrl of CATEGORY_URLS) {
+      if (allRaw.length >= maxListings) break;
+      let pageNum = 1;
 
-      await page.goto(url, { waitUntil: "networkidle", timeout: 30_000 });
+      while (allRaw.length < maxListings) {
+        const url = pageNum === 1 ? categoryUrl : `${categoryUrl}?page=${pageNum}`;
+        console.log(`[scraper] Fetching page ${pageNum}: ${url}`);
 
-      // Wait for listing cards to appear
-      await page.waitForSelector('[data-testid="card"], [class*="listing-card"], article', {
-        timeout: 15_000,
-      }).catch(() => {});
+        await page.goto(url, { waitUntil: "networkidle", timeout: 30_000 });
 
-      const cards = await page.evaluate(() => {
+        // Wait for listing cards to appear
+        await page.waitForSelector('[data-testid="card"], [class*="listing-card"], article', {
+          timeout: 15_000,
+        }).catch(() => {});
+
+        const cards = await page.evaluate(() => {
         const results = [];
 
         // TradeMe renders cards as <li> or <article> elements containing an <a> to the listing.
@@ -155,12 +161,15 @@ export async function scrapeListings({ maxListings = MAX_LISTINGS, visitDetailPa
 
       console.log(`[scraper] Found ${cards.length} cards on page ${pageNum}`);
 
-      // Post-process EndDate strings to ISO
+      // Post-process EndDate strings to ISO; deduplicate across categories
       for (const card of cards) {
         card.EndDate = parseEndDate(card.EndDate);
+        const id = String(card.ListingId);
+        if (!seenIds.has(id)) {
+          seenIds.add(id);
+          allRaw.push(card);
+        }
       }
-
-      allRaw.push(...cards);
 
       // Check if there's a next page
       const hasNextPage = await page.evaluate(() => {
@@ -170,7 +179,8 @@ export async function scrapeListings({ maxListings = MAX_LISTINGS, visitDetailPa
 
       pageNum++;
       await page.waitForTimeout(PAGE_DELAY_MS);
-    }
+      } // end while (pages)
+    }   // end for (categories)
 
     // Visit individual listing pages for body text (RAM often in description)
     if (visitDetailPages) {

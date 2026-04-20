@@ -121,7 +121,7 @@ export function extractListing(raw, scrapedAt) {
 
   return {
     id,
-    url: `https://www.trademe.co.nz/a/marketplace/computers/apple/listing/${id}`,
+    url: raw._url || `https://www.trademe.co.nz/a/listing/${id}`,
     title,
     chip: detectChip(combined),
     model: detectModel(combined),
