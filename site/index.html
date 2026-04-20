@@ -17,8 +17,9 @@
         <h1 class="text-xl font-bold tracking-tight">🖥 TradeMe Mac Finder</h1>
         <p class="text-xs text-gray-400 mt-0.5">Apple Silicon ranked by value for local AI inference</p>
       </div>
-      <div class="text-xs text-gray-500" x-show="scrapedAt">
-        Last updated: <span x-text="scrapedAt" class="text-gray-400"></span>
+      <div class="text-xs text-gray-500 text-right" x-show="scrapedAt">
+        <div>Last updated: <span x-text="scrapedAt" class="text-gray-400"></span> <span class="text-gray-600">NZST (Auckland)</span></div>
+        <div class="text-gray-700 mt-0.5">build <span x-text="version"></span></div>
       </div>
     </div>
   </header>

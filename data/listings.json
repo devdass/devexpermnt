@@ -16,7 +16,7 @@
       "price_nzd": 4500,
       "price_per_gb_ram": 70.3125,
       "ram_gb": 64,
-      "scraped_at": "2025-04-20T00:00:00.000Z",
+      "scraped_at": "2026-04-20T21:30:00.000Z",
       "seller_type": "dealer",
       "storage_gb": 2048,
       "title": "Mac Studio M1 Ultra 64GB Unified Memory 2TB SSD",
@@ -37,7 +37,7 @@
       "price_nzd": 2800,
       "price_per_gb_ram": 87.5,
       "ram_gb": 32,
-      "scraped_at": "2025-04-20T00:00:00.000Z",
+      "scraped_at": "2026-04-20T21:30:00.000Z",
       "seller_type": "private",
       "storage_gb": 1024,
       "title": "MacBook Pro M1 Max 32GB RAM 1TB SSD",
@@ -58,7 +58,7 @@
       "price_nzd": 1299,
       "price_per_gb_ram": 81.1875,
       "ram_gb": 16,
-      "scraped_at": "2025-04-20T00:00:00.000Z",
+      "scraped_at": "2026-04-20T21:30:00.000Z",
       "seller_type": "private",
       "storage_gb": 512,
       "title": "Apple Mac mini M2 Pro 16GB RAM 512GB SSD",
@@ -79,12 +79,12 @@
       "price_nzd": 899,
       "price_per_gb_ram": 112.375,
       "ram_gb": 8,
-      "scraped_at": "2025-04-20T00:00:00.000Z",
+      "scraped_at": "2026-04-20T21:30:00.000Z",
       "seller_type": "private",
       "storage_gb": 256,
       "title": "MacBook Air M2 8GB RAM 256GB SSD",
       "url": "https://www.trademe.co.nz/a/marketplace/computers/apple/listing/200000003"
     }
   ],
-  "scraped_at": "2025-04-20T00:00:00.000Z"
+  "scraped_at": "2026-04-20T21:30:00.000Z"
 }

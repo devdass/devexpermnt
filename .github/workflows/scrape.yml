@@ -33,11 +33,14 @@ jobs:
       - name: Scrape TradeMe
         run: node scraper/index.js
 
+      - name: Update site build version
+        run: npm run version:update
+
       - name: Commit updated data
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/
+          git add data/ site/version.json
           if git diff --cached --quiet; then
             echo "No data changes to commit"
           else

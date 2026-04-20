@@ -5,6 +5,7 @@ function app() {
     allListings: [],
     stats: {},
     scrapedAt: "",
+    version: "",
 
     chipFamilies: ["M1", "M2", "M3", "M4"],
     ramSteps: [8, 16, 32, 64, 96, 128, 192],
@@ -31,9 +32,10 @@ function app() {
 
     async init() {
       try {
-        const [listingsRes, statsRes] = await Promise.all([
+        const [listingsRes, statsRes, versionRes] = await Promise.all([
           fetch("../data/listings.json"),
           fetch("../data/stats.json"),
+          fetch("./version.json"),
         ]);
         if (!listingsRes.ok) throw new Error(`Failed to load listings.json: ${listingsRes.status}`);
         const data = await listingsRes.json();
@@ -42,6 +44,10 @@ function app() {
           ? new Date(data.scraped_at).toLocaleString("en-NZ", { timeZone: "Pacific/Auckland", dateStyle: "medium", timeStyle: "short" })
           : "";
         if (statsRes.ok) this.stats = await statsRes.json();
+        if (versionRes.ok) {
+          const v = await versionRes.json();
+          this.version = `${v.number} · ${v.sha}`;
+        }
       } catch (e) {
         this.error = `Could not load data: ${e.message}`;
       } finally {

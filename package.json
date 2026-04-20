@@ -4,7 +4,8 @@
   "description": "Ranks TradeMe Apple Silicon Mac listings by value-for-local-AI-inference",
   "type": "module",
   "scripts": {
-    "test": "node --test scraper/test/*.test.js"
+    "test": "node --test scraper/test/*.test.js",
+    "version:update": "node scripts/update-version.mjs"
   },
   "engines": {
     "node": ">=20"
