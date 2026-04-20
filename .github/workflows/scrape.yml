@@ -1,0 +1,15 @@
+# GitHub Actions workflow — scrapes TradeMe and commits updated data.
+# Implemented in Phase 6.
+name: scrape
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Not yet implemented
+        run: echo "Phase 6 not yet implemented" && exit 1

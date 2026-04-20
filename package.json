@@ -1,0 +1,12 @@
+{
+  "name": "trademe-mac-finder",
+  "version": "1.0.0",
+  "description": "Ranks TradeMe Apple Silicon Mac listings by value-for-local-AI-inference",
+  "type": "module",
+  "scripts": {
+    "test": "node --test scraper/test/*.test.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

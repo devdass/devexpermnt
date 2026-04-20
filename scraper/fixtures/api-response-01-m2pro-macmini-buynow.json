@@ -1,0 +1,28 @@
+{
+  "ListingId": 100000001,
+  "Title": "Apple Mac mini M2 Pro 16GB RAM 512GB SSD",
+  "StartPrice": 1299.00,
+  "BuyNowPrice": 1299.00,
+  "Body": "Excellent condition Mac mini with M2 Pro chip, 16GB unified memory, 512GB SSD. Purchased new in 2023, lightly used for home office. Comes with original power cable. Located in Auckland. Fixed price, no offers.",
+  "ListingLength": null,
+  "EndDate": "/Date(1800000000000)/",
+  "AsAt": "/Date(1745100000000)/",
+  "CategoryPath": "0001-0008-0168-",
+  "HasGallery": true,
+  "IsNew": false,
+  "IsBuyNow": true,
+  "HasBuyNow": true,
+  "AuctionId": null,
+  "IsAuction": false,
+  "PriceDisplay": "$1,299.00",
+  "Region": "Auckland",
+  "RegionId": 2,
+  "Suburb": "Ponsonby",
+  "HasReserve": false,
+  "ReserveState": 0,
+  "SellerType": "private",
+  "MemberProfile": {
+    "MemberRating": 45,
+    "IsDealer": false
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "ListingId": 100000003,
+  "Title": "Apple iPad Pro M1 11-inch 256GB WiFi Silver",
+  "StartPrice": 799.00,
+  "BuyNowPrice": 799.00,
+  "Body": "iPad Pro with M1 chip. 256GB storage, WiFi only. Comes with Apple Pencil 2nd gen and Magic Keyboard folio. Excellent condition, purchased 2022.",
+  "ListingLength": null,
+  "EndDate": "/Date(1800000000000)/",
+  "AsAt": "/Date(1745100000000)/",
+  "CategoryPath": "0001-0008-0235-",
+  "HasGallery": true,
+  "IsNew": false,
+  "IsBuyNow": true,
+  "HasBuyNow": true,
+  "AuctionId": null,
+  "IsAuction": false,
+  "PriceDisplay": "$799.00",
+  "Region": "Canterbury",
+  "RegionId": 14,
+  "Suburb": "Christchurch Central",
+  "HasReserve": false,
+  "ReserveState": 0,
+  "SellerType": "private",
+  "MemberProfile": {
+    "MemberRating": 30,
+    "IsDealer": false
+  }
+}
