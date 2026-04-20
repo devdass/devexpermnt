@@ -1,0 +1,30 @@
+{
+  "M1 Ultra__64": {
+    "chip": "M1 Ultra",
+    "count": 1,
+    "median_price": 4500,
+    "ram_bucket": 64,
+    "sample_listing_ids": ["200000005"]
+  },
+  "M1 Max__32": {
+    "chip": "M1 Max",
+    "count": 1,
+    "median_price": 2800,
+    "ram_bucket": 32,
+    "sample_listing_ids": ["200000002"]
+  },
+  "M2 Pro__16": {
+    "chip": "M2 Pro",
+    "count": 1,
+    "median_price": 1299,
+    "ram_bucket": 16,
+    "sample_listing_ids": ["200000001"]
+  },
+  "M2__8": {
+    "chip": "M2",
+    "count": 1,
+    "median_price": 899,
+    "ram_bucket": 8,
+    "sample_listing_ids": ["200000003"]
+  }
+}

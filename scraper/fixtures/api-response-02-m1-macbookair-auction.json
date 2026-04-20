@@ -1,0 +1,28 @@
+{
+  "ListingId": 100000002,
+  "Title": "MacBook Air 2020 Space Grey — Great Condition",
+  "StartPrice": 650.00,
+  "BuyNowPrice": null,
+  "Body": "Selling my MacBook Air with M1 chip. Has 8GB unified memory (RAM) and 256GB SSD. Screen in perfect condition, no scratches. Battery health 91%. Comes with charger. Located in Wellington. Pickup preferred but can post at buyer's cost.",
+  "ListingLength": 7,
+  "EndDate": "/Date(1745704800000)/",
+  "AsAt": "/Date(1745100000000)/",
+  "CategoryPath": "0001-0008-0168-",
+  "HasGallery": true,
+  "IsNew": false,
+  "IsBuyNow": false,
+  "HasBuyNow": false,
+  "AuctionId": 100000002,
+  "IsAuction": true,
+  "PriceDisplay": "$650.00",
+  "Region": "Wellington",
+  "RegionId": 3,
+  "Suburb": "Te Aro",
+  "HasReserve": false,
+  "ReserveState": 0,
+  "SellerType": "private",
+  "MemberProfile": {
+    "MemberRating": 12,
+    "IsDealer": false
+  }
+}

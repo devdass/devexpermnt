@@ -1,0 +1,16 @@
+{
+  "id": "100000001",
+  "url": "https://www.trademe.co.nz/a/marketplace/computers/apple/listing/100000001",
+  "title": "Apple Mac mini M2 Pro 16GB RAM 512GB SSD",
+  "chip": "M2 Pro",
+  "model": "Mac mini",
+  "ram_gb": 16,
+  "storage_gb": 512,
+  "price_nzd": 1299,
+  "is_auction": false,
+  "buy_now_available": true,
+  "ends_at": null,
+  "location": "Auckland",
+  "seller_type": "private",
+  "scraped_at": "__SCRAPED_AT__"
+}
