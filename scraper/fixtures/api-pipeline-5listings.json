@@ -1,0 +1,72 @@
+[
+  {
+    "ListingId": 200000001,
+    "Title": "Apple Mac mini M2 Pro 16GB RAM 512GB SSD",
+    "StartPrice": 1299.00,
+    "BuyNowPrice": 1299.00,
+    "Body": "Excellent condition, lightly used.",
+    "EndDate": "/Date(1800000000000)/",
+    "IsAuction": false,
+    "HasBuyNow": true,
+    "IsBuyNow": true,
+    "Region": "Auckland",
+    "SellerType": "private",
+    "MemberProfile": { "IsDealer": false }
+  },
+  {
+    "ListingId": 200000002,
+    "Title": "MacBook Pro M1 Max 32GB RAM 1TB SSD",
+    "StartPrice": 2800.00,
+    "BuyNowPrice": 2800.00,
+    "Body": "M1 Max chip. Perfect for pro work.",
+    "EndDate": "/Date(1800000000000)/",
+    "IsAuction": false,
+    "HasBuyNow": true,
+    "IsBuyNow": true,
+    "Region": "Wellington",
+    "SellerType": "private",
+    "MemberProfile": { "IsDealer": false }
+  },
+  {
+    "ListingId": 200000003,
+    "Title": "MacBook Air M2 8GB RAM 256GB SSD",
+    "StartPrice": 899.00,
+    "BuyNowPrice": 899.00,
+    "Body": "Great student laptop.",
+    "EndDate": "/Date(1800000000000)/",
+    "IsAuction": false,
+    "HasBuyNow": true,
+    "IsBuyNow": true,
+    "Region": "Canterbury",
+    "SellerType": "private",
+    "MemberProfile": { "IsDealer": false }
+  },
+  {
+    "ListingId": 200000004,
+    "Title": "Apple iPad Pro M1 256GB WiFi",
+    "StartPrice": 750.00,
+    "BuyNowPrice": 750.00,
+    "Body": "iPad Pro with M1 chip.",
+    "EndDate": "/Date(1800000000000)/",
+    "IsAuction": false,
+    "HasBuyNow": true,
+    "IsBuyNow": true,
+    "Region": "Auckland",
+    "SellerType": "private",
+    "MemberProfile": { "IsDealer": false }
+  },
+  {
+    "ListingId": 200000005,
+    "Title": "Mac Studio M1 Ultra 64GB Unified Memory 2TB SSD",
+    "StartPrice": 4500.00,
+    "BuyNowPrice": 4500.00,
+    "Body": "Barely used, incredible performance.",
+    "EndDate": "/Date(1800000000000)/",
+    "IsAuction": false,
+    "HasBuyNow": true,
+    "IsBuyNow": true,
+    "Region": "Otago",
+    "SellerType": "dealer",
+    "MemberProfile": { "IsDealer": true }
+  }
+]
