@@ -36,8 +36,14 @@
   <!-- Error -->
   <div x-show="error" class="max-w-xl mx-auto mt-12 p-4 bg-red-900/40 border border-red-700 rounded text-red-300 text-sm" x-text="error"></div>
 
+  <!-- Empty state (no scrape run yet) -->
+  <div x-show="!loading && !error && allListings.length === 0" class="max-w-xl mx-auto mt-16 p-6 bg-gray-900 border border-gray-800 rounded-lg text-center">
+    <p class="text-gray-300 text-sm mb-2">No listings available yet.</p>
+    <p class="text-gray-500 text-xs">The scraper has not run. Trigger the GitHub Action or run <code class="text-blue-400">node scraper/index.js</code> locally to populate data.</p>
+  </div>
+
   <!-- Main -->
-  <main x-show="!loading && !error" class="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+  <main x-show="!loading && !error && allListings.length > 0" class="max-w-7xl mx-auto px-4 sm:px-6 py-6">
 
     <!-- Filters -->
     <section class="bg-gray-900 border border-gray-800 rounded-lg p-4 mb-6">
