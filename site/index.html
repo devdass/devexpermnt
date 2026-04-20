@@ -4,9 +4,209 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>TradeMe Mac Finder — Apple Silicon for Local AI</title>
-  <!-- Implemented in Phase 5 -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <link rel="stylesheet" href="style.css" />
 </head>
-<body>
-  <p>Coming soon — Phase 5.</p>
+<body class="bg-gray-950 text-gray-100 min-h-screen" x-data="app()" x-init="init()">
+
+  <!-- Header -->
+  <header class="border-b border-gray-800 px-4 py-4 sm:px-6">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+      <div>
+        <h1 class="text-xl font-bold tracking-tight">🖥 TradeMe Mac Finder</h1>
+        <p class="text-xs text-gray-400 mt-0.5">Apple Silicon ranked by value for local AI inference</p>
+      </div>
+      <div class="text-xs text-gray-500" x-show="scrapedAt">
+        Last updated: <span x-text="scrapedAt" class="text-gray-400"></span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Loading -->
+  <div x-show="loading" class="flex items-center justify-center py-24 text-gray-400">
+    <svg class="animate-spin h-6 w-6 mr-3" viewBox="0 0 24 24" fill="none">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+    </svg>
+    Loading listings…
+  </div>
+
+  <!-- Error -->
+  <div x-show="error" class="max-w-xl mx-auto mt-12 p-4 bg-red-900/40 border border-red-700 rounded text-red-300 text-sm" x-text="error"></div>
+
+  <!-- Main -->
+  <main x-show="!loading && !error" class="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+
+    <!-- Filters -->
+    <section class="bg-gray-900 border border-gray-800 rounded-lg p-4 mb-6">
+      <h2 class="text-sm font-semibold text-gray-300 mb-3">Filters</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+
+        <!-- Chip family -->
+        <div>
+          <p class="text-xs text-gray-400 mb-1.5">Chip family</p>
+          <div class="flex flex-wrap gap-x-4 gap-y-1">
+            <template x-for="family in chipFamilies" :key="family">
+              <label class="flex items-center gap-1.5 text-sm cursor-pointer">
+                <input type="checkbox" :value="family" x-model="filters.chips" class="accent-blue-500" />
+                <span x-text="family"></span>
+              </label>
+            </template>
+          </div>
+        </div>
+
+        <!-- Min RAM -->
+        <div>
+          <p class="text-xs text-gray-400 mb-1.5">Min RAM: <span class="text-white font-medium" x-text="filters.minRam + 'GB'"></span></p>
+          <input type="range" x-model.number="filters.minRam"
+            :min="ramSteps[0]" :max="ramSteps[ramSteps.length-1]"
+            :step="1"
+            class="w-full accent-blue-500"
+            list="ram-ticks"
+          />
+          <datalist id="ram-ticks">
+            <template x-for="s in ramSteps" :key="s"><option :value="s"></option></template>
+          </datalist>
+          <div class="flex justify-between text-xs text-gray-600 mt-0.5">
+            <span x-text="ramSteps[0]+'GB'"></span>
+            <span x-text="ramSteps[ramSteps.length-1]+'GB'"></span>
+          </div>
+        </div>
+
+        <!-- Max price -->
+        <div>
+          <p class="text-xs text-gray-400 mb-1.5">Max price (NZD)</p>
+          <input type="number" x-model.number="filters.maxPrice" min="0" step="100"
+            placeholder="No limit"
+            class="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm focus:outline-none focus:border-blue-500" />
+        </div>
+
+        <!-- Toggles -->
+        <div class="flex flex-col gap-2 justify-end">
+          <label class="flex items-center gap-2 text-sm cursor-pointer">
+            <input type="checkbox" x-model="filters.hideAuctions" class="accent-blue-500" />
+            <span>Hide auctions</span>
+          </label>
+          <label class="flex items-center gap-2 text-sm cursor-pointer">
+            <input type="checkbox" x-model="filters.hideBelow16" class="accent-blue-500" />
+            <span>Hide &lt;16GB</span>
+          </label>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Results count -->
+    <p class="text-xs text-gray-500 mb-3">
+      Showing <span class="text-gray-300 font-medium" x-text="filtered.length"></span>
+      of <span x-text="allListings.length"></span> listings
+    </p>
+
+    <!-- Desktop table -->
+    <div class="hidden sm:block overflow-x-auto">
+      <table class="w-full text-sm border-collapse">
+        <thead>
+          <tr class="text-left text-xs text-gray-400 border-b border-gray-800">
+            <template x-for="col in columns" :key="col.key">
+              <th class="pb-2 pr-4 font-medium whitespace-nowrap cursor-pointer hover:text-white select-none"
+                  @click="setSort(col.key)">
+                <span x-text="col.label"></span>
+                <span x-show="sort.key === col.key" x-text="sort.dir === 'desc' ? ' ↓' : ' ↑'" class="text-blue-400"></span>
+              </th>
+            </template>
+          </tr>
+        </thead>
+        <tbody>
+          <template x-for="l in filtered" :key="l.id">
+            <tr class="border-b border-gray-800/50 hover:bg-gray-900/60 transition-colors"
+                :class="{ 'opacity-60': !l.inference_viable }">
+              <!-- Title -->
+              <td class="py-2.5 pr-4 max-w-xs">
+                <a :href="l.url" target="_blank" rel="noopener noreferrer"
+                   class="text-blue-400 hover:text-blue-300 hover:underline line-clamp-2"
+                   x-text="l.title"></a>
+                <div class="flex flex-wrap gap-1 mt-1">
+                  <template x-for="note in l.notes" :key="note">
+                    <span class="text-[10px] bg-yellow-900/50 text-yellow-300 border border-yellow-800/50 px-1 rounded" x-text="note"></span>
+                  </template>
+                </div>
+              </td>
+              <!-- Score -->
+              <td class="py-2.5 pr-4 font-mono tabular-nums">
+                <span x-show="l.inference_score !== null" x-text="l.inference_score?.toFixed(2)" class="text-green-400 font-semibold"></span>
+                <span x-show="l.inference_score === null" class="text-gray-600">—</span>
+              </td>
+              <!-- Price -->
+              <td class="py-2.5 pr-4 whitespace-nowrap">
+                <span class="font-medium" x-text="'$' + l.price_nzd.toLocaleString()"></span>
+                <span x-show="medianBadge(l)" class="ml-1 text-[10px] px-1 rounded border"
+                  :class="medianBadge(l) === 'below' ? 'text-green-400 border-green-800 bg-green-900/30' : 'text-red-400 border-red-800 bg-red-900/30'"
+                  x-text="medianBadge(l) === 'below' ? '↓ median' : '↑ median'"></span>
+              </td>
+              <!-- RAM -->
+              <td class="py-2.5 pr-4 whitespace-nowrap">
+                <span x-show="l.ram_gb" x-text="l.ram_gb + 'GB'" class="bg-purple-900/40 text-purple-300 border border-purple-800/50 text-xs px-1.5 py-0.5 rounded"></span>
+                <span x-show="!l.ram_gb" class="text-gray-600 text-xs">?</span>
+              </td>
+              <!-- Chip -->
+              <td class="py-2.5 pr-4 whitespace-nowrap">
+                <span x-show="l.chip" x-text="l.chip" class="bg-gray-800 text-gray-200 text-xs px-1.5 py-0.5 rounded border border-gray-700"></span>
+                <span x-show="!l.chip" class="text-gray-600 text-xs">?</span>
+              </td>
+              <!-- Model -->
+              <td class="py-2.5 pr-4 text-xs text-gray-300 whitespace-nowrap" x-text="l.model || '?'"></td>
+              <!-- Ends -->
+              <td class="py-2.5 pr-4 text-xs text-gray-400 whitespace-nowrap">
+                <span x-show="l.is_auction && l.ends_at" x-text="formatEnds(l.ends_at)"></span>
+                <span x-show="!l.is_auction" class="text-gray-600">Fixed</span>
+                <span x-show="l.is_auction && !l.ends_at" class="text-gray-600">—</span>
+              </td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+      <p x-show="filtered.length === 0" class="text-center py-12 text-gray-500">No listings match the current filters.</p>
+    </div>
+
+    <!-- Mobile cards -->
+    <div class="sm:hidden space-y-3">
+      <template x-for="l in filtered" :key="l.id">
+        <div class="bg-gray-900 border border-gray-800 rounded-lg p-3"
+             :class="{ 'opacity-60': !l.inference_viable }">
+          <a :href="l.url" target="_blank" rel="noopener noreferrer"
+             class="text-blue-400 hover:text-blue-300 font-medium text-sm leading-snug" x-text="l.title"></a>
+          <div class="flex flex-wrap gap-1 mt-1.5">
+            <span x-show="l.chip" x-text="l.chip" class="bg-gray-800 text-gray-200 text-xs px-1.5 py-0.5 rounded border border-gray-700"></span>
+            <span x-show="l.ram_gb" x-text="l.ram_gb + 'GB'" class="bg-purple-900/40 text-purple-300 border border-purple-800/50 text-xs px-1.5 py-0.5 rounded"></span>
+            <template x-for="note in l.notes" :key="note">
+              <span class="text-[10px] bg-yellow-900/50 text-yellow-300 border border-yellow-800/50 px-1 rounded" x-text="note"></span>
+            </template>
+          </div>
+          <div class="flex items-center justify-between mt-2 text-sm">
+            <div>
+              <span class="font-medium" x-text="'$' + l.price_nzd.toLocaleString()"></span>
+              <span x-show="medianBadge(l)" class="ml-1 text-xs px-1 rounded border"
+                :class="medianBadge(l) === 'below' ? 'text-green-400 border-green-800 bg-green-900/30' : 'text-red-400 border-red-800 bg-red-900/30'"
+                x-text="medianBadge(l) === 'below' ? '↓ median' : '↑ median'"></span>
+            </div>
+            <div class="text-xs text-gray-400">
+              Score: <span x-show="l.inference_score !== null" x-text="l.inference_score?.toFixed(2)" class="text-green-400 font-semibold"></span>
+              <span x-show="l.inference_score === null" class="text-gray-600">—</span>
+            </div>
+          </div>
+        </div>
+      </template>
+      <p x-show="filtered.length === 0" class="text-center py-12 text-gray-500">No listings match the current filters.</p>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-gray-800 px-4 py-4 mt-8 text-center text-xs text-gray-600">
+    Score = (RAM × bandwidth) ÷ price. Higher is better value for LLM inference. Data from TradeMe API. No tracking.
+  </footer>
+
+  <script src="app.js"></script>
 </body>
 </html>
