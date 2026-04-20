@@ -1,7 +1,7 @@
 import { writeFileSync, mkdirSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { createClient } from "./trademe-client.js";
+import { scrapeListings } from "./trademe-client.js";
 import { extractListing } from "./extract.js";
 import { scoreListing, rankListings } from "./score.js";
 
@@ -53,26 +53,11 @@ function sortedKeys(obj) {
   return Object.fromEntries(Object.entries(obj).sort(([a], [b]) => a.localeCompare(b)));
 }
 
-function requireEnv(name) {
-  const val = process.env[name];
-  if (!val) {
-    console.error(`[index] Missing required environment variable: ${name}`);
-    process.exit(1);
-  }
-  return val;
-}
-
 async function main() {
-  const consumerKey    = requireEnv("TRADEME_CONSUMER_KEY");
-  const consumerSecret = requireEnv("TRADEME_CONSUMER_SECRET");
-  const token          = requireEnv("TRADEME_OAUTH_TOKEN");
-  const tokenSecret    = requireEnv("TRADEME_OAUTH_SECRET");
-
-  const client = createClient({ consumerKey, consumerSecret, token, tokenSecret });
   const scrapedAt = new Date().toISOString();
 
   console.log(`[index] Starting scrape at ${scrapedAt}`);
-  const rawListings = await client.fetchAllListings();
+  const rawListings = await scrapeListings();
   console.log(`[index] Fetched ${rawListings.length} raw listings`);
 
   const normalized = rawListings
