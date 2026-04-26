@@ -12,17 +12,18 @@
   "M4__16": {
     "chip": "M4",
     "ram_bucket": 16,
-    "median_price": 950,
-    "count": 2,
+    "median_price": 1049,
+    "count": 3,
     "sample_listing_ids": [
       "5895950798",
+      "5904132067",
       "5900667762"
     ]
   },
   "M1__8": {
     "chip": "M1",
     "ram_bucket": 8,
-    "median_price": 899.5,
+    "median_price": 999.5,
     "count": 12,
     "sample_listing_ids": [
       "5895864704",
@@ -30,28 +31,6 @@
       "5903617558",
       "5902162449",
       "5893358174"
-    ]
-  },
-  "M2__64": {
-    "chip": "M2",
-    "ram_bucket": 64,
-    "median_price": 1490,
-    "count": 1,
-    "sample_listing_ids": [
-      "5892587698"
-    ]
-  },
-  "M2__8": {
-    "chip": "M2",
-    "ram_bucket": 8,
-    "median_price": 1290,
-    "count": 5,
-    "sample_listing_ids": [
-      "5863973418",
-      "5893250402",
-      "5903461565",
-      "5902842524",
-      "5902631182"
     ]
   },
   "M1 Pro__16": {
@@ -70,12 +49,10 @@
   "M1__16": {
     "chip": "M1",
     "ram_bucket": 16,
-    "median_price": 1250,
-    "count": 3,
+    "median_price": 1800,
+    "count": 1,
     "sample_listing_ids": [
-      "5902349078",
-      "5902451790",
-      "5902451233"
+      "5902349078"
     ]
   },
   "M3 Pro__32": {
@@ -87,25 +64,14 @@
       "5902127693"
     ]
   },
-  "M1 Max__64": {
-    "chip": "M1 Max",
-    "ram_bucket": 64,
-    "median_price": 4249,
-    "count": 2,
-    "sample_listing_ids": [
-      "5902126094",
-      "5903900116"
-    ]
-  },
   "M2__16": {
     "chip": "M2",
     "ram_bucket": 16,
-    "median_price": 160.95,
-    "count": 4,
+    "median_price": 312,
+    "count": 3,
     "sample_listing_ids": [
       "5900524231",
       "5903637888",
-      "5892603491",
       "5902504765"
     ]
   },
@@ -126,6 +92,18 @@
     "count": 1,
     "sample_listing_ids": [
       "5893958954"
+    ]
+  },
+  "M2__8": {
+    "chip": "M2",
+    "ram_bucket": 8,
+    "median_price": 1270,
+    "count": 4,
+    "sample_listing_ids": [
+      "5893250402",
+      "5903461565",
+      "5902842524",
+      "5902631182"
     ]
   },
   "M2 Pro__16": {
@@ -156,6 +134,24 @@
     "count": 1,
     "sample_listing_ids": [
       "5893756025"
+    ]
+  },
+  "M3 Max__64": {
+    "chip": "M3 Max",
+    "ram_bucket": 64,
+    "median_price": 6580,
+    "count": 1,
+    "sample_listing_ids": [
+      "5903996568"
+    ]
+  },
+  "M1 Max__64": {
+    "chip": "M1 Max",
+    "ram_bucket": 64,
+    "median_price": 3999,
+    "count": 1,
+    "sample_listing_ids": [
+      "5903900116"
     ]
   },
   "M1 Pro__8": {
