@@ -1,28 +1,35 @@
 {
+  "M3__8": {
+    "chip": "M3",
+    "ram_bucket": 8,
+    "median_price": 1549.5,
+    "count": 2,
+    "sample_listing_ids": [
+      "5902363675",
+      "5895556133"
+    ]
+  },
+  "M4__16": {
+    "chip": "M4",
+    "ram_bucket": 16,
+    "median_price": 950,
+    "count": 2,
+    "sample_listing_ids": [
+      "5895950798",
+      "5900667762"
+    ]
+  },
   "M1__8": {
     "chip": "M1",
     "ram_bucket": 8,
-    "median_price": 949.5,
-    "count": 14,
+    "median_price": 899.5,
+    "count": 12,
     "sample_listing_ids": [
-      "5892396656",
-      "5893358174",
-      "5885599987",
-      "5892072025",
-      "5885968934"
-    ]
-  },
-  "M1__16": {
-    "chip": "M1",
-    "ram_bucket": 16,
-    "median_price": 787.02,
-    "count": 5,
-    "sample_listing_ids": [
-      "5883765570",
-      "5891040048",
-      "5887990928",
-      "5887170028",
-      "5894664575"
+      "5895864704",
+      "5900650449",
+      "5903617558",
+      "5902162449",
+      "5893358174"
     ]
   },
   "M2__64": {
@@ -34,97 +41,112 @@
       "5892587698"
     ]
   },
-  "M1__192": {
-    "chip": "M1",
-    "ram_bucket": 192,
-    "median_price": 1695,
-    "count": 1,
-    "sample_listing_ids": [
-      "5892391251"
-    ]
-  },
-  "M4 Pro__16": {
-    "chip": "M4 Pro",
-    "ram_bucket": 16,
-    "median_price": 1065,
-    "count": 2,
-    "sample_listing_ids": [
-      "5890835753",
-      "5886117498"
-    ]
-  },
-  "M3 Pro__16": {
-    "chip": "M3 Pro",
-    "ram_bucket": 16,
-    "median_price": 2749,
-    "count": 1,
-    "sample_listing_ids": [
-      "5895154164"
-    ]
-  },
-  "M2 Max__32": {
-    "chip": "M2 Max",
-    "ram_bucket": 32,
-    "median_price": 2997,
-    "count": 2,
-    "sample_listing_ids": [
-      "5893958954",
-      "5892181550"
-    ]
-  },
   "M2__8": {
     "chip": "M2",
     "ram_bucket": 8,
-    "median_price": 1145,
-    "count": 2,
-    "sample_listing_ids": [
-      "5893250402",
-      "5894102684"
-    ]
-  },
-  "M3__16": {
-    "chip": "M3",
-    "ram_bucket": 16,
-    "median_price": 1650,
+    "median_price": 1290,
     "count": 5,
     "sample_listing_ids": [
-      "5892262891",
-      "5887701414",
-      "5885442115",
-      "5891104186",
-      "5888781880"
+      "5863973418",
+      "5893250402",
+      "5903461565",
+      "5902842524",
+      "5902631182"
     ]
   },
   "M1 Pro__16": {
     "chip": "M1 Pro",
     "ram_bucket": 16,
     "median_price": 1545,
-    "count": 10,
+    "count": 9,
     "sample_listing_ids": [
-      "5892181538",
-      "5892181531",
-      "5889020780",
-      "5889020763",
-      "5887308759"
+      "5903993580",
+      "5903993119",
+      "5902280733",
+      "5902279820",
+      "5895415280"
+    ]
+  },
+  "M1__16": {
+    "chip": "M1",
+    "ram_bucket": 16,
+    "median_price": 1250,
+    "count": 3,
+    "sample_listing_ids": [
+      "5902349078",
+      "5902451790",
+      "5902451233"
+    ]
+  },
+  "M3 Pro__32": {
+    "chip": "M3 Pro",
+    "ram_bucket": 32,
+    "median_price": 3828,
+    "count": 1,
+    "sample_listing_ids": [
+      "5902127693"
     ]
   },
   "M1 Max__64": {
     "chip": "M1 Max",
     "ram_bucket": 64,
-    "median_price": 4999,
-    "count": 1,
-    "sample_listing_ids": [
-      "5890563681"
-    ]
-  },
-  "M3__8": {
-    "chip": "M3",
-    "ram_bucket": 8,
-    "median_price": 1749.5,
+    "median_price": 4249,
     "count": 2,
     "sample_listing_ids": [
-      "5894204320",
-      "5883962753"
+      "5902126094",
+      "5903900116"
+    ]
+  },
+  "M2__16": {
+    "chip": "M2",
+    "ram_bucket": 16,
+    "median_price": 160.95,
+    "count": 4,
+    "sample_listing_ids": [
+      "5900524231",
+      "5903637888",
+      "5892603491",
+      "5902504765"
+    ]
+  },
+  "M3__16": {
+    "chip": "M3",
+    "ram_bucket": 16,
+    "median_price": 1642,
+    "count": 2,
+    "sample_listing_ids": [
+      "5899266730",
+      "5897040040"
+    ]
+  },
+  "M2 Max__32": {
+    "chip": "M2 Max",
+    "ram_bucket": 32,
+    "median_price": 2999,
+    "count": 1,
+    "sample_listing_ids": [
+      "5893958954"
+    ]
+  },
+  "M2 Pro__16": {
+    "chip": "M2 Pro",
+    "ram_bucket": 16,
+    "median_price": 1599,
+    "count": 3,
+    "sample_listing_ids": [
+      "5897754536",
+      "5902719199",
+      "5902689964"
+    ]
+  },
+  "M3 Pro__16": {
+    "chip": "M3 Pro",
+    "ram_bucket": 16,
+    "median_price": 2475,
+    "count": 2,
+    "sample_listing_ids": [
+      "5897139440",
+      "5903460701"
     ]
   },
   "M3__192": {
@@ -136,34 +158,13 @@
       "5893756025"
     ]
   },
-  "M2__16": {
-    "chip": "M2",
-    "ram_bucket": 16,
-    "median_price": 8.44,
-    "count": 3,
-    "sample_listing_ids": [
-      "5892603491",
-      "5883715264",
-      "5894705474"
-    ]
-  },
-  "M1 Pro__32": {
+  "M1 Pro__8": {
     "chip": "M1 Pro",
-    "ram_bucket": 32,
-    "median_price": 2099,
+    "ram_bucket": 8,
+    "median_price": 1699,
     "count": 1,
     "sample_listing_ids": [
-      "5889326664"
-    ]
-  },
-  "M2__192": {
-    "chip": "M2",
-    "ram_bucket": 192,
-    "median_price": 1499,
-    "count": 2,
-    "sample_listing_ids": [
-      "5889317502",
-      "5889317105"
+      "5863972698"
     ]
   }
 }
